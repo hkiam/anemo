@@ -121,4 +121,5 @@ Testfälle werden wie oben über Schlüssel, Tag oder Automatisierungsverweis zu
 Claude und andere Agenten nutzen Anemo über das Model Context Protocol (`/api/mcp`). Sie können suchen, Testfälle
 lesen, Zyklen planen, Ergebnisse und Evidenzen erfassen, Unklares eskalieren und Fehler vorbereiten. Sie handeln
 mit den Rechten des Token-Benutzers. Projekte mit gesperrten externen Diensten sind für Agenten unsichtbar.
-Ergebnisse von Agentenkonten brauchen eine QA-Freigabe. Anleitungen: [mcp.md](../mcp.md), [agenten.md](../agenten.md).
+Ergebnisse von Agentenkonten brauchen eine QA-Freigabe. Einrichtung in Claude Code, Claude Desktop, Codex, OpenCode, pi,
+Gemini CLI, Cursor und VS Code: [mcp.md](../mcp.md#einrichten); Tests durch Agenten: [agenten.md](../agenten.md).

@@ -2,9 +2,11 @@
 
 1. **Agentenkonto** anlegen: *Administration → Benutzer → + Benutzer*, „🤖 KI-Agent“ ankreuzen, im Projekt die Rolle
    „Ausführen“ geben. Als dieses Konto ein **API-Token** erzeugen (Menü oben rechts).
-2. **Agent einrichten**, z. B. Claude Code mit Anemo- und Browser-Werkzeugen:
+2. **Agent einrichten**, z. B. Claude Code mit Anemo- und Browser-Werkzeugen (andere Clients wie Claude Desktop,
+   Codex, OpenCode, pi, Gemini CLI, Cursor oder VS Code: [mcp.md](mcp.md#einrichten)):
 ```bash
-claude mcp add --transport http anemo https://anemo.firma.de/api/mcp --header "Authorization: Bearer anemo_…"
+export ANEMO_TOKEN=anemo_…
+claude mcp add --transport http anemo https://anemo.example/api/mcp --header 'Authorization: Bearer ${ANEMO_TOKEN}'
 claude mcp add playwright -- npx @playwright/mcp@latest
 ```
 3. **Auftrag** an den Agenten, z. B.: *„Arbeite den Zyklus ‚Smoke 7.4‘ in Anemo ab: hole dir mit claim_next einen Test,
