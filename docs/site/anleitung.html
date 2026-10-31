@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anemo – Kurzanleitung</title>
+  <meta name="description" content="Kurzanleitung für Anemo: Projekt einrichten, Testfälle schreiben und freigeben, Testplan und Zyklen planen, durchführen, Fehler melden, freigeben und nachweisen.">
+  <link rel="icon" href="bilder/anemo-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="bilder/anemo-logo.svg" alt="" width="30" height="30">Anemo</a>
+    <nav class="main" aria-label="Hauptnavigation">
+      <a class="opt" href="./#warum">Warum Anemo</a>
+      <a class="opt" href="./#funktionen">Funktionen</a>
+      <a href="anleitung.html" aria-current="page">Anleitung</a>
+      <a class="opt2" href="./#start">Installation</a>
+      <a data-repo href="#">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inhalt">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Kurzanleitung</div>
+      <h1>Vom ersten Testfall zur Freigabe</h1>
+      <p class="lead">Die wichtigsten Abläufe in acht Schritten. Ausführlich beschreibt alles das
+        <a data-repo-path="docs/handbuch/README.md" href="#">Handbuch</a>, das auch in Anemo selbst unter
+        <span class="path">Kontomenü → ❓ Hilfe</span> bereitsteht.</p>
+      <nav class="toc" aria-label="Schritte">
+        <a href="#projekt">1 Projekt</a><a href="#testfaelle">2 Testfälle</a><a href="#planen">3 Planen</a>
+        <a href="#durchfuehren">4 Durchführen</a><a href="#fehler">5 Fehler &amp; Nachtest</a>
+        <a href="#freigabe">6 Freigabe</a><a href="#nachweis">7 Nachweis</a><a href="#automatisierung">8 Automatisierung &amp; KI</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="wrap">
+      <ol class="steps">
+        <li id="projekt">
+          <h2>Projekt anlegen und Team einladen</h2>
+          <p>Als Systemadministration unter <span class="path">Administration → Projekte &amp; Rechte</span> mit
+            <b>+ Projekt</b> ein Projekt anlegen (Schlüssel wie <code>SHOP</code>, Name). Über <b>Mitglieder</b> Personen
+            oder Gruppen eine Rolle geben:</p>
+          <ul>
+            <li><b>Lesen</b> – sieht alles, ändert nichts</li>
+            <li><b>Ausführen</b> – erfasst Ergebnisse</li>
+            <li><b>Pflegen</b> (Testdesign, Testleitung) – schreibt Testfälle, plant, gibt frei</li>
+            <li><b>Projektadmin</b> – zusätzlich Mitglieder, Regeln und Massenfreigabe</li>
+          </ul>
+          <p>Projekte mit besonderem Schutzbedarf auf <b>eingeschränkt</b> stellen: Dann sehen nur Mitglieder das
+            Projekt, Zugriffe werden protokolliert. Konten kommen lokal, per OIDC oder LDAP.</p>
+        </li>
+
+        <li id="testfaelle">
+          <h2>Testfälle schreiben und freigeben</h2>
+          <p>Unter <span class="path">Testfälle</span> Ordner anlegen und mit <b>+ Testfall</b> den Editor öffnen.
+            Format wählen: <b>Klassisch</b> (Aktion, Testdaten, erwartetes Ergebnis), <b>Gherkin</b> (Angenommen / Wenn /
+            Dann, mit Live-Prüfung) oder <b>Freitext</b>. <span class="kbd">Strg</span>+<span class="kbd">S</span>
+            speichert – jedes Speichern erzeugt eine neue Version.</p>
+          <ul>
+            <li>Vorbedingungen, Schrittfolgen und ganze Tests lassen sich wiederverwenden; Datensätze machen aus einem
+              Testfall mehrere Durchläufe.</li>
+            <li>Über <b>Verweise</b> Anforderungen aus OpenProject oder Jira verknüpfen – Grundlage für die
+              Anforderungsabdeckung.</li>
+            <li>Status über <b>ändern …</b>: Entwurf → Bereit zum Review → Freigegeben. Freigeben darf nur, wer die
+              Version nicht selbst geschrieben hat (Vier-Augen-Prinzip).</li>
+            <li>Die Suche versteht eine Abfragesprache, z. B. <code>priorität &gt;= Kritisch UND label = Smoke</code>.</li>
+          </ul>
+          <figure class="shot"><img src="bilder/screenshots/03-testfall.png" width="2880" height="1800" loading="lazy"
+            alt="Testfallliste mit Ordnern, daneben ein freigegebener Testfall mit Version, Vorbedingungen und Schritten"></figure>
+        </li>
+
+        <li id="planen">
+          <h2>Testplan und Zyklen planen</h2>
+          <p>Unter <span class="path">Planung &amp; Ausführung</span> mit <b>+ Plan</b> einen Testplan je Release anlegen
+            mit Zielen, Umfang und Release. Im <b>Release-Cockpit</b> unter <b>Ausstiegskriterien → Bearbeiten</b> die
+            Schwellen festlegen, etwa Bestehensquote ≥ 95 %, Durchführungsgrad 100 %, höchstens ein offener Fehler,
+            alle Anforderungen bestanden.</p>
+          <ul>
+            <li><b>+ Testzyklus</b> je Konfiguration, z. B. „Regression – Chrome / Windows 11“ mit Build, Umgebung und
+              Zeitraum.</li>
+            <li><b>+ Tests aufnehmen</b>: Testfälle suchen und einplanen – oder <b>Risikobasiert auswählen</b> lassen.</li>
+            <li>Ausführungen zuweisen, Zyklen wiederholen, verteilen und den Plan fürs nächste Release kopieren.</li>
+          </ul>
+          <figure class="shot"><img src="bilder/screenshots/06-zyklus.png" width="2880" height="1800" loading="lazy"
+            alt="Testzyklus mit Build, Umgebung, Konfiguration, Fortschrittsbalken und Ausführungen mit Status und Zuständigen"></figure>
+        </li>
+
+        <li id="durchfuehren">
+          <h2>Durchführen</h2>
+          <p>Im Zyklus <b>▶ Durchführen (n offen)</b> öffnet die nächste offene Ausführung als ganze Seite. Auf der
+            Startseite führt <b>Meine Aufgaben</b> direkt dorthin.</p>
+          <ul>
+            <li>Je Schritt bestanden, fehlgeschlagen oder blockiert setzen und das tatsächliche Ergebnis notieren;
+              Screenshots einfach mit <span class="kbd">Strg</span>+<span class="kbd">V</span> einfügen.</li>
+            <li>Tastatur: <span class="kbd">j</span>/<span class="kbd">k</span> Schritt wechseln,
+              <span class="kbd">p</span> bestanden, <span class="kbd">f</span> fehlgeschlagen,
+              <span class="kbd">b</span> blockiert, <span class="kbd">Strg</span>+<span class="kbd">Enter</span>
+              speichern &amp; weiter.</li>
+            <li>Weitere Ergebnisse über <b>⋯</b>: „Fehlgeschlagen (bekannt)“ für dokumentierte Fehler,
+              „Nicht anwendbar“ für Prüfpunkte, die in dieser Konfiguration nicht zutreffen.</li>
+            <li>Explorative Sitzungen mit Auftrag und Timebox ergänzen die geplanten Tests.</li>
+          </ul>
+          <figure class="shot"><img src="bilder/screenshots/05-durchfuehrung.png" width="2880" height="1800" loading="lazy"
+            alt="Durchführung eines Testfalls mit Ergebnisknöpfen je Schritt, Feld für das tatsächliche Ergebnis und Werkzeugleiste mit Anhang, Fehler melden und Verknüpfen"></figure>
+        </li>
+
+        <li id="fehler">
+          <h2>Fehler melden und nachtesten</h2>
+          <p><b>🐞 Fehler melden</b> am Schritt oder an der Ausführung füllt eine Vorlage mit Umgebung, Konfiguration,
+            Schritten bis zur Fehlerstelle und Evidenzen und legt das Ticket in OpenProject oder Jira an. Vorhandene
+            Tickets verknüpft <b>🔗 Verknüpfen</b>.</p>
+          <p>Meldet das Ticket „behoben“, plant Anemo den Nachtest automatisch in einem offenen Zyklus mit gleicher
+            Konfiguration ein. Das Ergebnis geht als Kommentar zurück an das Ticket. Fehlt ein passender Zyklus, steht
+            der Fall im Cockpit unter „behoben, aber nicht nachgetestet“.</p>
+        </li>
+
+        <li id="freigabe">
+          <h2>Im Release-Cockpit entscheiden</h2>
+          <p>Testplan wählen → Tab <b>Release-Cockpit</b>. Anemo zeigt Ausstiegskriterien mit Ziel und Ist, offene und
+            bekannte Fehler, Restrisiken, den Stand je Konfiguration und eine regelbasierte Empfehlung.</p>
+          <ul>
+            <li>Das <b>Fazit</b> schreibt die Testleitung selbst oder lässt einen KI-Entwurf erstellen – der Bericht
+              weist Verfasser und KI-Beteiligung aus.</li>
+            <li><b>Freigabe entscheiden …</b>: freigegeben, mit Auflagen oder nicht freigegeben – mit Begründung.</li>
+            <li>Anemo legt dazu das Lieferpaket als <b>Freigabestand</b> mit SHA-256 ab. Ändert sich danach etwas, zeigt
+              das Cockpit die Zahl der Änderungen an.</li>
+          </ul>
+          <figure class="shot"><img src="bilder/screenshots/01-cockpit.png" width="2880" height="1800" loading="lazy"
+            alt="Release-Cockpit mit Freigabe mit Auflagen, nicht empfohlener Freigabe samt Begründungen und Ausstiegskriterien"></figure>
+        </li>
+
+        <li id="nachweis">
+          <h2>Berichte und Nachweise</h2>
+          <ul>
+            <li><b>📄 Berichte</b> am Testplan: Teststatusbericht, Testabschlussbericht und Rückverfolgbarkeit – im Browser,
+              als PDF (getaggt, PDF/A-2b-Merkmale), Markdown oder JSON. Zyklen liefern das Testprotokoll.</li>
+            <li><b>Lieferpaket</b>: Berichte, maschinenlesbare Ergebnisse, Evidenzen und Prüfsummen in einem ZIP –
+              optional mit Ed25519-Signatur.</li>
+            <li><span class="path">Planung &amp; Ausführung → Protokoll</span>: jede fachliche Änderung mit Person,
+              Zeitpunkt, altem und neuem Wert, filterbar und als CSV.</li>
+            <li><b>Test-Health</b> und <b>Portfolio</b> zeigen Pflegebedarf und den Stand über alle Projekte.</li>
+          </ul>
+          <figure class="shot"><img src="bilder/screenshots/09-protokoll.png" width="2880" height="1800" loading="lazy"
+            alt="Protokoll eines Projekts mit Filtern und Einträgen zu Freigabestand, Freigabeentscheidung, Fazit und Ergebnissen"></figure>
+        </li>
+
+        <li id="automatisierung">
+          <h2>Automatisierung und KI einbinden</h2>
+          <ul>
+            <li><b>CI-Ergebnisse</b>: Pipelines senden JUnit-, Cucumber-, Playwright- und weitere Berichte per API-Token
+              an Anemo; Ergebnisse landen im passenden Zyklus und Testfall
+              (<a data-repo-path="docs/automation.md" href="#">Anleitung</a>).</li>
+            <li><b>GitLab</b>: <code>.feature</code>-Dateien mit Gherkin-Testfällen abgleichen, Pipelines aus Anemo starten.</li>
+            <li><b>KI-Assistenz</b>: OpenAI-kompatibles Modell in <span class="path">Administration → KI</span>
+              eintragen – etwa ein lokales vLLM oder Ollama (<a data-repo-path="docs/ki-assistenz.md" href="#">Anleitung</a>).</li>
+            <li><b>KI-Agenten (MCP)</b>: Agenten lesen Testfälle, führen Tests aus und melden Ergebnisse. Diese zählen erst
+              nach der <b>KI-Ergebnisprüfung</b> durch die Testleitung (<a data-repo-path="docs/mcp.md" href="#">Anleitung</a>).</li>
+            <li><b>Umzug aus Jira + Zephyr</b>: Migration mit Verifikationsbericht unter
+              <span class="path">Administration → System → Migration</span>.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Anemo · Apache License 2.0 · ohne Cookies und Tracker</span>
+    <span><a data-repo href="#">GitHub</a> · <a data-repo-path="docs/handbuch/README.md" href="#">Handbuch</a> ·
+      <a data-repo-path="CHANGELOG.md" href="#">Änderungen</a></span>
+  </div>
+</footer>
+<script src="repo.js"></script>
+</body>
+</html>

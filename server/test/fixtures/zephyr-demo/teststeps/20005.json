@@ -1,0 +1,12 @@
+[
+ {
+  "id": 331,
+  "orderId": 1,
+  "step": "Als Benutzer ohne Schreibrechte PDF hochladen",
+  "data": "",
+  "result": "Hinweis 'Keine Berechtigung'",
+  "customFieldValues": {
+   "Risiko": "hoch"
+  }
+ }
+]

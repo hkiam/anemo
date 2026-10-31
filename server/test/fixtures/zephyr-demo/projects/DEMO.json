@@ -1,0 +1,47 @@
+{
+ "self": "http://jira.example.invalid/rest/api/2/project/10000",
+ "id": "10000",
+ "key": "DEMO",
+ "name": "Demo-Projekt",
+ "description": "Fiktives Beispielprojekt für Migrationstests",
+ "lead": {
+  "self": "http://jira.example.invalid/rest/api/2/user?username=mmustermann",
+  "name": "mmustermann",
+  "key": "mmustermann",
+  "emailAddress": "mmustermann@example.org",
+  "avatarUrls": {
+   "48x48": "http://jira.example.invalid/secure/useravatar?owner=mmustermann"
+  },
+  "displayName": "Max Mustermann",
+  "active": true,
+  "timeZone": "Europe/Berlin"
+ },
+ "components": [
+  {
+   "id": "10001",
+   "name": "Weboberfläche"
+  },
+  {
+   "id": "10002",
+   "name": "Suche"
+  }
+ ],
+ "versions": [
+  {
+   "id": "10010",
+   "name": "7.3",
+   "released": true
+  },
+  {
+   "id": "10011",
+   "name": "7.4",
+   "released": false
+  }
+ ],
+ "issueTypes": [
+  {
+   "id": "10005",
+   "name": "Test"
+  }
+ ]
+}

@@ -1,0 +1,103 @@
+{
+ "expand": "renderedFields,names,schema,operations,editmeta,changelog",
+ "id": "20002",
+ "self": "http://jira.example.invalid/rest/api/2/issue/20002",
+ "key": "DEMO-2",
+ "fields": {
+  "issuetype": {
+   "name": "Test",
+   "id": "10005"
+  },
+  "project": {
+   "id": "10000",
+   "key": "DEMO",
+   "name": "Demo-Projekt"
+  },
+  "watches": {
+   "watchCount": 1,
+   "isWatching": false
+  },
+  "votes": {
+   "votes": 0
+  },
+  "workratio": -1,
+  "lastViewed": null,
+  "updated": "2026-10-01T10:00:00.000+0200",
+  "progress": {
+   "progress": 0,
+   "total": 0
+  },
+  "aggregateprogress": {
+   "progress": 0,
+   "total": 0
+  },
+  "timetracking": {},
+  "customfield_10300": null,
+  "environment": null,
+  "duedate": null,
+  "resolution": null,
+  "resolutiondate": null,
+  "subtasks": [],
+  "issuelinks": [],
+  "attachment": [],
+  "comment": {
+   "comments": [],
+   "total": 0
+  },
+  "versions": [],
+  "fixVersions": [],
+  "labels": [
+   "Akte"
+  ],
+  "components": [
+   {
+    "name": "Weboberfläche"
+   }
+  ],
+  "customfield_10100": null,
+  "customfield_10101": null,
+  "customfield_10200": {
+   "value": "Smoketest",
+   "id": "2"
+  },
+  "customfield_10201": null,
+  "summary": "Akte öffnen",
+  "description": "Prüft das Öffnen einer bestehenden Akte über die Aktenzeichensuche.",
+  "status": {
+   "name": "Fertig",
+   "id": "1",
+   "statusCategory": {
+    "key": "new"
+   }
+  },
+  "priority": {
+   "name": "Kritisch"
+  },
+  "assignee": null,
+  "reporter": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=emusterfrau",
+   "name": "emusterfrau",
+   "key": "emusterfrau",
+   "emailAddress": "emusterfrau@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=emusterfrau"
+   },
+   "displayName": "Erika Musterfrau",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "creator": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=emusterfrau",
+   "name": "emusterfrau",
+   "key": "emusterfrau",
+   "emailAddress": "emusterfrau@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=emusterfrau"
+   },
+   "displayName": "Erika Musterfrau",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "created": "2023-11-20T14:00:00.000+0100"
+ }
+}

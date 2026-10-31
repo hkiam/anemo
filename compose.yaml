@@ -1,0 +1,66 @@
+# Lokale Umgebung.
+#   Entwicklung (schnelle Runden):  docker compose up -d db && npm run dev
+#   Produktionsnah (ein Container): docker compose --profile app up --build
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: anemo
+      POSTGRES_PASSWORD: anemo
+      POSTGRES_DB: anemo
+    ports:
+      - "127.0.0.1:${ANEMO_DB_PORT:-5433}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anemo -d anemo"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Lokale Kopie der Zephyr-Tabellen aus der Jira-MySQL (geladen per `npm run zephyr:load`).
+  zephyr-db:
+    profiles: ["zephyr"]
+    image: mariadb:11.8
+    environment:
+      MARIADB_ROOT_PASSWORD: zephyr
+      MARIADB_DATABASE: zephyr
+    ports:
+      - "127.0.0.1:${ANEMO_ZEPHYR_DB_PORT:-3316}:3306"
+    volumes:
+      - zephyr-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  app:
+    profiles: ["app"]
+    build: .
+    # Integrationen, SSO, SMTP, KI usw. aus .env (siehe .env.example); die Werte unter "environment" haben Vorrang
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgres://anemo:anemo@db:5432/anemo
+      SNAPSHOT_ROOT: /snapshots
+      ATTACHMENT_DIR: /data/attachments
+      ANEMO_PORT: "8080"
+    ports:
+      - "127.0.0.1:${ANEMO_PORT:-8090}:8080"
+    volumes:
+      - ./migration-snapshots:/snapshots:ro
+      - app-data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  zephyr-data:
+  db-data:
+  app-data:

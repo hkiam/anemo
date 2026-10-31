@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+*.log
+/migration-snapshots/*
+!/migration-snapshots/README.md
+test-results/
+playwright-report/
+.data/
+/altsystem/
+/backups/
+/build/
+/.serena/
+
+# Screenshot-Werkzeug (Datenbankname, Kennwort, Anhänge)
+tools/screenshots/.state/

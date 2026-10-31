@@ -1,0 +1,38 @@
+[
+ {
+  "id": 301,
+  "orderId": 1,
+  "step": "Akte DEMO/2026/1 öffnen",
+  "data": "",
+  "result": "Akte wird angezeigt",
+  "htmlStep": "<p>Akte DEMO/2026/1 öffnen</p>",
+  "htmlData": "<p></p>",
+  "htmlResult": "<p>Akte wird angezeigt</p>",
+  "createdBy": "emusterfrau",
+  "modifiedBy": "emusterfrau"
+ },
+ {
+  "id": 302,
+  "orderId": 2,
+  "step": "PDF über 'Hochladen' auswählen",
+  "data": "beispiel.pdf (2 MB)",
+  "result": "Upload-Dialog zeigt Fortschritt",
+  "htmlStep": "<p>PDF über 'Hochladen' auswählen</p>",
+  "htmlData": "<p>beispiel.pdf (2 MB)</p>",
+  "htmlResult": "<p>Upload-Dialog zeigt Fortschritt</p>",
+  "createdBy": "emusterfrau",
+  "modifiedBy": "emusterfrau"
+ },
+ {
+  "id": 303,
+  "orderId": 3,
+  "step": "Upload bestätigen",
+  "data": "",
+  "result": "Dokument erscheint in der Akte",
+  "htmlStep": "<p>Upload bestätigen</p>",
+  "htmlData": "<p></p>",
+  "htmlResult": "<p>Dokument erscheint in der Akte</p>",
+  "createdBy": "emusterfrau",
+  "modifiedBy": "emusterfrau"
+ }
+]

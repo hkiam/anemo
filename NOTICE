@@ -1,0 +1,9 @@
+Anemo – agentische Plattform für Testmanagement und Qualitätssicherung
+Copyright 2026 Maik Hofmann und die Anemo-Mitwirkenden
+
+Dieses Produkt steht unter der Apache License, Version 2.0 (siehe LICENSE).
+
+Es enthält bzw. nutzt Software Dritter unter deren eigenen Lizenzen. Die ausgelieferten
+Komponenten, ihre Lizenzen und Lizenztexte stehen in THIRD-PARTY-NOTICES.md (wird beim Build erzeugt); die vollständige
+Stückliste (SBOM, CycloneDX und SPDX) erzeugt `npm run third-party` bzw. der Build
+(im Container-Image unter /app/third-party).

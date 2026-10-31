@@ -1,0 +1,251 @@
+{
+ "expand": "renderedFields,names,schema,operations,editmeta,changelog",
+ "id": "20001",
+ "self": "http://jira.example.invalid/rest/api/2/issue/20001",
+ "key": "DEMO-1",
+ "fields": {
+  "issuetype": {
+   "name": "Test",
+   "id": "10005"
+  },
+  "project": {
+   "id": "10000",
+   "key": "DEMO",
+   "name": "Demo-Projekt"
+  },
+  "watches": {
+   "watchCount": 1,
+   "isWatching": false
+  },
+  "votes": {
+   "votes": 0
+  },
+  "workratio": -1,
+  "lastViewed": null,
+  "updated": "2026-10-01T10:00:00.000+0200",
+  "progress": {
+   "progress": 0,
+   "total": 0
+  },
+  "aggregateprogress": {
+   "progress": 0,
+   "total": 0
+  },
+  "timetracking": {},
+  "customfield_10300": null,
+  "environment": null,
+  "duedate": null,
+  "resolution": null,
+  "resolutiondate": null,
+  "subtasks": [
+   {
+    "key": "DEMO-2001",
+    "fields": {
+     "summary": "Testerstellung und -durchführung",
+     "status": {
+      "name": "Fertig"
+     }
+    }
+   }
+  ],
+  "issuelinks": [
+   {
+    "id": "1",
+    "type": {
+     "name": "Relates",
+     "outward": "relates to",
+     "inward": "relates to"
+    },
+    "inwardIssue": {
+     "key": "DEMO-100",
+     "fields": {
+      "summary": "PDF-Upload bricht bei Umlauten ab",
+      "status": {
+       "name": "Offen"
+      },
+      "issuetype": {
+       "name": "Bug"
+      }
+     }
+    }
+   },
+   {
+    "id": "1",
+    "type": {
+     "name": "Tests",
+     "outward": "tests",
+     "inward": "is tested by"
+    },
+    "outwardIssue": {
+     "key": "DEMO-50",
+     "fields": {
+      "summary": "Als Sachbearbeiter:in möchte ich PDFs ablegen",
+      "status": {
+       "name": "Offen"
+      },
+      "issuetype": {
+       "name": "Story"
+      }
+     }
+    }
+   }
+  ],
+  "attachment": [
+   {
+    "filename": "screenshot-1.png",
+    "mimeType": "image/png",
+    "size": 10240,
+    "content": "http://jira.example.invalid/secure/attachment/4711/screenshot-1.png",
+    "author": {
+     "self": "http://jira.example.invalid/rest/api/2/user?username=emusterfrau",
+     "name": "emusterfrau",
+     "key": "emusterfrau",
+     "emailAddress": "emusterfrau@example.org",
+     "avatarUrls": {
+      "48x48": "http://jira.example.invalid/secure/useravatar?owner=emusterfrau"
+     },
+     "displayName": "Erika Musterfrau",
+     "active": true,
+     "timeZone": "Europe/Berlin"
+    },
+    "created": "2024-03-02T10:00:00.000+0100",
+    "id": "4711"
+   }
+  ],
+  "comment": {
+   "comments": [
+    {
+     "author": {
+      "self": "http://jira.example.invalid/rest/api/2/user?username=mmustermann",
+      "name": "mmustermann",
+      "key": "mmustermann",
+      "emailAddress": "mmustermann@example.org",
+      "avatarUrls": {
+       "48x48": "http://jira.example.invalid/secure/useravatar?owner=mmustermann"
+      },
+      "displayName": "Max Mustermann",
+      "active": true,
+      "timeZone": "Europe/Berlin"
+     },
+     "created": "2024-03-03T11:00:00.000+0100",
+     "body": "Bitte mit [~emusterfrau] abstimmen, erika.musterfrau@example.org"
+    }
+   ],
+   "total": 1
+  },
+  "versions": [
+   {
+    "id": "10010",
+    "name": "7.3"
+   }
+  ],
+  "fixVersions": [
+   {
+    "id": "10011",
+    "name": "7.4"
+   }
+  ],
+  "labels": [
+   "Upload",
+   "Akte",
+   "QS-Board"
+  ],
+  "components": [
+   {
+    "name": "Weboberfläche"
+   }
+  ],
+  "customfield_10100": "DEMO-10",
+  "customfield_10101": [
+   "com.atlassian.greenhopper.service.sprint.Sprint@1a2b[id=7,rapidViewId=3,state=CLOSED,name=QS Sprint 7.3,startDate=2026-09-01T00:00:00.000+02:00,endDate=2026-09-15T00:00:00.000+02:00,completeDate=<null>,sequence=7]"
+  ],
+  "customfield_10200": {
+   "self": "http://jira.example.invalid/rest/api/2/customFieldOption/1",
+   "value": "Regressionstest",
+   "id": "1"
+  },
+  "customfield_10201": {
+   "value": "automatisiert",
+   "id": "3"
+  },
+  "summary": "PDF in Akte ablegen",
+  "description": "{panel:titleBGColor=#fafafa|title=!http://jira.example.invalid/secure/attachment/1/icon.png! *Allgemein* }\nEin PDF-Dokument wird per Upload in einer geöffneten Akte abgelegt.\n{panel}\n{panel:titleBGColor=#fafafa|title=!http://jira.example.invalid/secure/attachment/1/icon.png! *Fokus / Abgrenzung* }\n*Was wird getestet:*\n- Upload von PDF\n- Ablage in der richtigen Akte\n{panel}\n{panel:titleBGColor=#fafafa|title=!http://jira.example.invalid/secure/attachment/1/icon.png! *Vorbedingungen* }\n- Eine Akte ist geöffnet\n- Der Benutzer besitzt Schreibrechte\n{panel}\n{panel:titleBGColor=#fafafa|title=!http://jira.example.invalid/secure/attachment/1/icon.png! *Technisches* }\n \n{panel}\n{panel:titleBGColor=#fafafa|title=!http://jira.example.invalid/secure/attachment/1/icon.png! *Automation* }\n||ID||Testname||aktiv||\n|REG_0001|Weboberfläche.Upload.PDF_ablegen|ja|\n{panel}\n\n|| Bearbeiter || Datum || Grund ||\n| EMU | 03.02.2025 | Schritt 2 angepasst (Hinweis von Max Mustermann) |\n",
+  "status": {
+   "name": "Fertig",
+   "id": "1",
+   "statusCategory": {
+    "key": "new"
+   }
+  },
+  "priority": {
+   "name": "Schwer"
+  },
+  "assignee": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=emusterfrau",
+   "name": "emusterfrau",
+   "key": "emusterfrau",
+   "emailAddress": "emusterfrau@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=emusterfrau"
+   },
+   "displayName": "Erika Musterfrau",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "reporter": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=mmustermann",
+   "name": "mmustermann",
+   "key": "mmustermann",
+   "emailAddress": "mmustermann@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=mmustermann"
+   },
+   "displayName": "Max Mustermann",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "creator": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=mmustermann",
+   "name": "mmustermann",
+   "key": "mmustermann",
+   "emailAddress": "mmustermann@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=mmustermann"
+   },
+   "displayName": "Max Mustermann",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "created": "2024-03-01T09:00:00.000+0100"
+ },
+ "changelog": {
+  "startAt": 0,
+  "maxResults": 1,
+  "total": 1,
+  "histories": [
+   {
+    "id": "1",
+    "author": {
+     "self": "http://jira.example.invalid/rest/api/2/user?username=emusterfrau",
+     "name": "emusterfrau",
+     "key": "emusterfrau",
+     "emailAddress": "emusterfrau@example.org",
+     "avatarUrls": {
+      "48x48": "http://jira.example.invalid/secure/useravatar?owner=emusterfrau"
+     },
+     "displayName": "Erika Musterfrau",
+     "active": true,
+     "timeZone": "Europe/Berlin"
+    },
+    "created": "2025-02-03T10:00:00.000+0100",
+    "items": [
+     {
+      "field": "description",
+      "fromString": "alt",
+      "toString": "neu"
+     }
+    ]
+   }
+  ]
+ }
+}

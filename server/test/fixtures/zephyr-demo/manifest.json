@@ -1,0 +1,10 @@
+{
+ "format": "anemo-zephyr-snapshot/1",
+ "sourceSystem": "jira-zephyr",
+ "baseUrl": "http://jira.example.invalid",
+ "extractedAt": "2026-10-11T08:00:00.000Z",
+ "anonymized": false,
+ "projects": [
+  "DEMO"
+ ]
+}

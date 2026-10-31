@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anemo – Testmanagement</title>
+  <meta name="description" content="Anemo ist eine selbst betriebene Open-Source-Plattform für Testmanagement: versionierte Testfälle, schnelle Durchführung, Release-Cockpit mit revisionssicherer Freigabe, Audit-Trail und KI-Agenten unter Kontrolle.">
+  <meta property="og:title" content="Anemo – Testmanagement, das bis zur Freigabe mitdenkt">
+  <meta property="og:description" content="Selbst betrieben, Open Source (Apache 2.0): Testfälle, Durchführung, Release-Cockpit, Audit-Trail, KI-Agenten über MCP.">
+  <meta property="og:image" content="bilder/screenshots/01-cockpit.png">
+  <link rel="icon" href="bilder/anemo-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="bilder/anemo-logo.svg" alt="" width="30" height="30">Anemo</a>
+    <nav class="main" aria-label="Hauptnavigation">
+      <a class="opt" href="#warum">Warum Anemo</a>
+      <a class="opt" href="#funktionen">Funktionen</a>
+      <a href="anleitung.html">Anleitung</a>
+      <a class="opt2" href="#start">Installation</a>
+      <a data-repo href="#">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inhalt">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Open Source · selbst betrieben · Apache 2.0</div>
+      <h1>Testmanagement, das bis zur Freigabe mitdenkt.</h1>
+      <p class="lead">Anemo bündelt Testfälle, Durchführung, Auswertung und Freigabe in einem Werkzeug – mit lückenlosem
+        Nachweis, wer wann was geprüft und entschieden hat. Läuft vollständig in Ihrer Infrastruktur: ein Container und
+        PostgreSQL, auf Wunsch mit lokalem Sprachmodell.</p>
+      <div class="cta">
+        <a class="btn primary" href="#start">In wenigen Minuten starten</a>
+        <a class="btn" href="anleitung.html">Kurzanleitung ansehen</a>
+        <a class="btn" data-repo href="#">Quelltext auf GitHub</a>
+      </div>
+      <figure class="shot" style="margin:0">
+        <img src="bilder/screenshots/01-cockpit.png" width="2880" height="1800"
+             alt="Release-Cockpit eines Testplans: Freigabe mit Auflagen samt abgelegtem Lieferpaket, regelbasierte Empfehlung und Tabelle der Ausstiegskriterien mit Ziel- und Istwerten">
+      </figure>
+      <div class="badges" aria-label="Eckdaten">
+        <span class="badge">Node.js + PostgreSQL</span><span class="badge">ein Distroless-Container</span>
+        <span class="badge">OIDC · LDAP</span><span class="badge">MCP für KI-Agenten</span>
+        <span class="badge">Migration aus Jira + Zephyr</span><span class="badge">WCAG 2.1 AA geprüft</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="warum" class="alt">
+    <div class="wrap">
+      <div class="eyebrow">Warum Anemo</div>
+      <h2>Vom Testfall bis zur belastbaren Freigabeentscheidung</h2>
+      <p class="lead">Viele Werkzeuge verwalten Testfälle. Anemo sorgt zusätzlich dafür, dass am Ende eine Entscheidung
+        steht, die auch Monate später noch nachvollziehbar ist.</p>
+      <div class="grid">
+        <div class="card"><div class="ico" aria-hidden="true">🚦</div><h3>Freigabe auf Fakten</h3>
+          <p>Ausstiegskriterien, offene Fehler und Anforderungsabdeckung je Konfiguration – mit regelbasierter Empfehlung
+            und dokumentierter Entscheidung.</p></div>
+        <div class="card"><div class="ico" aria-hidden="true">🔏</div><h3>Revisionssicher</h3>
+          <p>Zu jeder Entscheidung wird das Lieferpaket mit Prüfsumme abgelegt. Das Protokoll hält alte und neue Werte fest
+            und ist in der Datenbank gegen Änderungen gesperrt.</p></div>
+        <div class="card"><div class="ico" aria-hidden="true">🧾</div><h3>Versionen statt Überraschungen</h3>
+          <p>Testfälle sind versioniert und werden im Vier-Augen-Prinzip freigegeben. Jede Ausführung zeigt, welche Version
+            getestet wurde.</p></div>
+        <div class="card"><div class="ico" aria-hidden="true">⌨️</div><h3>Schnell in der Durchführung</h3>
+          <p>Fokusansicht mit Tastaturbedienung, Screenshots per Strg+V, Fehlermeldung mit einem Klick und automatischer
+            Nachtest nach der Behebung.</p></div>
+        <div class="card"><div class="ico" aria-hidden="true">🤖</div><h3>KI unter Kontrolle</h3>
+          <p>Agenten arbeiten über MCP mit, ihre Ergebnisse zählen erst nach Prüfung durch die Testleitung. Sprachmodelle
+            laufen auf Wunsch on-prem.</p></div>
+        <div class="card"><div class="ico" aria-hidden="true">🏠</div><h3>Ihre Daten bleiben bei Ihnen</h3>
+          <p>Keine Cloud-Pflicht, keine Telemetrie. Vertrauliche Projekte sehen nur Mitglieder, Zugriffe werden
+            protokolliert.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="funktionen">
+    <div class="wrap">
+      <div class="eyebrow">Funktionen</div>
+      <h2>Alles, was ein Testteam täglich braucht</h2>
+
+      <div class="feature">
+        <div class="text">
+          <h3>Testfälle, die man gern pflegt</h3>
+          <ul>
+            <li>Klassisch (Schritt, Testdaten, Erwartung), als Gherkin oder Freitext</li>
+            <li>Unveränderliche Versionen und Freigabe-Workflow mit Vier-Augen-Prinzip</li>
+            <li>Wiederverwendbare Vorbedingungen, Bausteine, aufrufbare Tests und Datensätze</li>
+            <li>Ordner, Labels, eigene Felder und eine Abfragesprache für jede Auswahl</li>
+          </ul>
+        </div>
+        <figure class="shot" style="margin:0"><img src="bilder/screenshots/03-testfall.png" width="2880" height="1800" loading="lazy"
+          alt="Testfallliste mit Ordnern und Freigabestatus, daneben die Detailansicht eines Testfalls mit Ziel, Vorbedingungen und Schritten"></figure>
+      </div>
+
+      <div class="feature">
+        <div class="text">
+          <h3>Durchführung ohne Reibung</h3>
+          <ul>
+            <li>Fokusansicht Schritt für Schritt, vollständig per Tastatur</li>
+            <li>Beobachtungen mit Screenshots per Einfügen, Anhänge, Zeiterfassung</li>
+            <li>Fehler direkt melden oder verknüpfen (OpenProject, Jira)</li>
+            <li>Behobene Fehler lösen automatisch einen Nachtest in passender Konfiguration aus</li>
+          </ul>
+        </div>
+        <figure class="shot" style="margin:0"><img src="bilder/screenshots/05-durchfuehrung.png" width="2880" height="1800" loading="lazy"
+          alt="Fokusansicht der Durchführung mit Schritten, Ergebnisknöpfen je Schritt und Gesamtergebnis"></figure>
+      </div>
+
+      <div class="feature">
+        <div class="text">
+          <h3>Überblick für die Testleitung</h3>
+          <ul>
+            <li>Startseite mit eigenen Aufgaben, aktiven Zyklen, Team-Fortschritt und Top-Fehlern</li>
+            <li>Ergebnis-Matrix über alle Zyklen und Konfigurationen</li>
+            <li>Test-Health findet nie oder lange nicht ausgeführte, wackelnde und doppelte Testfälle</li>
+            <li>Berichte nach ISO/IEC/IEEE 29119-3 als barrierearmes PDF</li>
+          </ul>
+        </div>
+        <figure class="shot" style="margin:0"><img src="bilder/screenshots/08-start.png" width="2880" height="1800" loading="lazy"
+          alt="Startseite eines Projekts mit Kennzahlen, Aufgaben der Testleitung, aktiven Testzyklen, Team-Fortschritt und Top-Fehlern"></figure>
+      </div>
+
+      <div class="feature">
+        <div class="text">
+          <h3>Nachvollziehbar bis ins Detail</h3>
+          <ul>
+            <li>Protokoll aller fachlichen Änderungen mit Person, Zeitpunkt, altem und neuem Wert</li>
+            <li>Filter nach Ereignis, Person und Zeitraum, Export als CSV</li>
+            <li>Unveränderlich – auch für Administratoren über die Anwendung</li>
+          </ul>
+        </div>
+        <figure class="shot" style="margin:0"><img src="bilder/screenshots/09-protokoll.png" width="2880" height="1800" loading="lazy"
+          alt="Protokoll eines Projekts mit Freigabeentscheidung, geändertem Fazit und erfassten Ergebnissen samt Person und Zeitpunkt"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="wrap">
+      <div class="eyebrow">Anbindungen</div>
+      <h2>Passt in Ihre Landschaft</h2>
+      <div class="grid">
+        <div class="card"><h3>Tickets</h3><p>OpenProject und Jira: Anforderungen verknüpfen, Fehler anlegen, Status abgleichen, Nachtest-Ergebnis als Kommentar.</p></div>
+        <div class="card"><h3>CI/CD</h3><p>Ergebnisse aus Pipelines übernehmen: JUnit, Cucumber, TestNG, NUnit, Playwright, Behave u. a.; GitLab-Abgleich von <code>.feature</code>-Dateien.</p></div>
+        <div class="card"><h3>Anmeldung</h3><p>Lokale Konten, OIDC (Keycloak, Entra ID), LDAP/Active Directory, Gruppen und Rollen je Projekt.</p></div>
+        <div class="card"><h3>KI und Agenten</h3><p>MCP-Server für Agenten, OpenAI-kompatible Modelle (vLLM, Ollama oder Cloud), Kennzeichnung „mit KI erstellt“.</p></div>
+        <div class="card"><h3>Benachrichtigungen</h3><p>E-Mail, Webhooks für Teams, Slack und Mattermost, Beobachten von Testfällen und Zyklen.</p></div>
+        <div class="card"><h3>Umzug aus Zephyr</h3><p>Verlustfreie Migration aus Jira + Zephyr Squad mit Versionshistorie, Ausführungen und Anhängen – mit Verifikationsbericht.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <div class="wrap">
+      <div class="eyebrow">Installation</div>
+      <h2>In wenigen Minuten startklar</h2>
+      <p class="lead">Voraussetzung ist Docker. Anemo bringt seine Datenbank im Compose-Profil gleich mit.</p>
+      <pre><code>git clone <span data-repo-text>https://github.com/&lt;konto&gt;/anemo</span>.git anemo &amp;&amp; cd anemo
+echo "ANEMO_ADMIN_PASSWORD=Bitte-gleich-aendern-1" &gt; .env
+docker compose --profile app up --build</code></pre>
+      <p>Danach <code>http://localhost:8090</code> öffnen und als <code>admin</code> anmelden. Für den Dauerbetrieb
+        (TLS, Sicherung, Aktualisierung, alle Einstellungen) gibt es das
+        <a data-repo-path="docs/handbuch/20-betrieb.md" href="#">Betriebshandbuch</a>. Wie es dann weitergeht, zeigt die
+        <a href="anleitung.html">Kurzanleitung</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Anemo · Apache License 2.0 · ohne Cookies und Tracker</span>
+    <span><a data-repo href="#">GitHub</a> · <a data-repo-path="docs/handbuch/README.md" href="#">Handbuch</a> ·
+      <a data-repo-path="CHANGELOG.md" href="#">Änderungen</a></span>
+  </div>
+</footer>
+<script src="repo.js"></script>
+</body>
+</html>

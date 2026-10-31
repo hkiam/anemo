@@ -1,0 +1,111 @@
+{
+ "expand": "renderedFields,names,schema,operations,editmeta,changelog",
+ "id": "20004",
+ "self": "http://jira.example.invalid/rest/api/2/issue/20004",
+ "key": "DEMO-4",
+ "fields": {
+  "issuetype": {
+   "name": "Test",
+   "id": "10005"
+  },
+  "project": {
+   "id": "10000",
+   "key": "DEMO",
+   "name": "Demo-Projekt"
+  },
+  "watches": {
+   "watchCount": 1,
+   "isWatching": false
+  },
+  "votes": {
+   "votes": 0
+  },
+  "workratio": -1,
+  "lastViewed": null,
+  "updated": "2026-10-01T10:00:00.000+0200",
+  "progress": {
+   "progress": 0,
+   "total": 0
+  },
+  "aggregateprogress": {
+   "progress": 0,
+   "total": 0
+  },
+  "timetracking": {},
+  "customfield_10300": null,
+  "environment": "Oracle 19c",
+  "duedate": null,
+  "resolution": null,
+  "resolutiondate": null,
+  "subtasks": [],
+  "issuelinks": [],
+  "attachment": [],
+  "comment": {
+   "comments": [],
+   "total": 0
+  },
+  "versions": [],
+  "fixVersions": [],
+  "labels": [
+   "Suche"
+  ],
+  "components": [
+   {
+    "name": "Suche"
+   }
+  ],
+  "customfield_10100": null,
+  "customfield_10101": null,
+  "customfield_10200": null,
+  "customfield_10201": null,
+  "summary": "Suche nach Aktenzeichen",
+  "description": "{panel:titleBGColor=#fafafa|title=!http://jira.example.invalid/secure/attachment/1/icon.png! *Allgemein* }\nSuche mit vollständigem und unvollständigem Aktenzeichen.\n{panel}\n{panel:titleBGColor=#fafafa|title=!http://jira.example.invalid/secure/attachment/1/icon.png! *Testdaten* }\nAZ 4711/26, AZ 4711*\n{panel}\n",
+  "status": {
+   "name": "Review!",
+   "id": "1",
+   "statusCategory": {
+    "key": "new"
+   }
+  },
+  "priority": {
+   "name": "Schwer"
+  },
+  "assignee": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=mmustermann",
+   "name": "mmustermann",
+   "key": "mmustermann",
+   "emailAddress": "mmustermann@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=mmustermann"
+   },
+   "displayName": "Max Mustermann",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "reporter": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=mmustermann",
+   "name": "mmustermann",
+   "key": "mmustermann",
+   "emailAddress": "mmustermann@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=mmustermann"
+   },
+   "displayName": "Max Mustermann",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "creator": {
+   "self": "http://jira.example.invalid/rest/api/2/user?username=mmustermann",
+   "name": "mmustermann",
+   "key": "mmustermann",
+   "emailAddress": "mmustermann@example.org",
+   "avatarUrls": {
+    "48x48": "http://jira.example.invalid/secure/useravatar?owner=mmustermann"
+   },
+   "displayName": "Max Mustermann",
+   "active": true,
+   "timeZone": "Europe/Berlin"
+  },
+  "created": "2025-02-02T08:00:00.000+0100"
+ }
+}

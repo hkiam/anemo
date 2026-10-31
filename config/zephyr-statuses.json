@@ -1,0 +1,40 @@
+{
+  "source": "Standardstatus von Zephyr for Jira (Zephyr Squad Server/DC) ohne eigene Erweiterungen",
+  "provisional": true,
+  "usage": "Nur Rückfall für Dumps ohne Zephyr-Einstellungen (Exportskript < 1.1). Aktuelle Exporte enthalten die echten Listen. Eigene Status einer Instanz: Datei kopieren, ergänzen und mit --statuses übergeben.",
+  "notes": [
+    "Eigene Status (z. B. „bestanden mit Mangel“) sind instanzspezifisch und fehlen hier bewusst."
+  ],
+  "statuses": [
+    {
+      "id": -1,
+      "name": "UNEXECUTED",
+      "description": "The Test step has not yet been executed.",
+      "color": "#A0A0A0"
+    },
+    {
+      "id": 1,
+      "name": "PASS",
+      "description": "Test step was executed and passed successfully",
+      "color": "#75B000"
+    },
+    {
+      "id": 2,
+      "name": "FAIL",
+      "description": "Test step was executed and failed.",
+      "color": "#CC3300"
+    },
+    {
+      "id": 3,
+      "name": "WIP",
+      "description": "Test step execution is a work-in-progress.",
+      "color": "#F2B000"
+    },
+    {
+      "id": 4,
+      "name": "BLOCKED",
+      "description": "The Test step execution of this test was blocked for some reason.",
+      "color": "#6693B0"
+    }
+  ]
+}

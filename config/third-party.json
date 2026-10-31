@@ -1,0 +1,43 @@
+{
+  "$comment": "Richtlinie für Fremdkomponenten (tools/third-party.ts). Anemo steht unter Apache-2.0. Laufzeit = alles, was im Container bzw. im ausgelieferten Web-Bundle steckt; Entwicklung = nur Bauen und Testen.",
+  "allowed": ["MIT", "MIT-0", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "Unlicense", "CC0-1.0", "BlueOak-1.0.0", "Python-2.0", "Zlib", "CC-BY-4.0"],
+  "review": ["MPL-2.0", "EPL-2.0", "LGPL-2.1-only", "LGPL-2.1-or-later", "LGPL-3.0-only", "LGPL-3.0-or-later", "CC-BY-SA-4.0"],
+  "denied": ["GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0-only", "GPL-3.0-or-later", "AGPL-3.0-only", "AGPL-3.0-or-later", "SSPL-1.0", "BUSL-1.1", "Commons-Clause", "UNLICENSED"],
+  "devAllowedReview": true,
+  "exceptions": {
+    "dejavu-fonts": "Bitstream-Vera-Lizenz (für die Arev-Glyphen gleichlautend, DejaVu-Änderungen gemeinfrei): freizügige Schriftlizenz – Nutzung, Einbetten in Dokumente und Weitergabe erlaubt, Lizenztext liegt bei (server/assets/fonts/LICENSE); Einschränkungen betreffen nur den Verkauf der Schrift für sich allein und geänderte Fassungen unter den Namen Bitstream/Vera bzw. Arev"
+  },
+  "audit": { "failOn": ["high", "critical"], "runtimeOnly": true },
+  "vendored": [
+    {
+      "name": "dejavu-fonts",
+      "version": "2.37",
+      "license": "Bitstream-Vera",
+      "usage": "server",
+      "path": "server/assets/fonts",
+      "source": "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2",
+      "repository": "https://github.com/dejavu-fonts/dejavu-fonts",
+      "$comment": "Schriften der PDF-Berichte (DejaVu Sans, Sans Bold, Sans Mono), unverändert aus dem offiziellen Release-Archiv (SHA-256 des Archivs fa9ca4d13871dd122f61258a80d01751d603b4d3ee14095d65453b4e846e17d7); in die PDFs wird nur eine Teilmenge eingebettet.",
+      "files": {
+        "DejaVuSans.ttf": "7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954",
+        "DejaVuSans-Bold.ttf": "e6476c1b80502924294eed40894c5b18e06c181444ca953e5334262df9c27724",
+        "DejaVuSansMono.ttf": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+        "LICENSE": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+      }
+    },
+    {
+      "name": "compact-icc-profiles-srgb-v2-micro",
+      "version": "2018-03-20",
+      "license": "CC0-1.0",
+      "usage": "server",
+      "path": "server/assets/icc",
+      "source": "https://raw.githubusercontent.com/saucecontrol/Compact-ICC-Profiles/master/profiles/sRGB-v2-micro.icc",
+      "repository": "https://github.com/saucecontrol/Compact-ICC-Profiles",
+      "$comment": "sRGB-Farbprofil (ICC v2, 456 Byte) für den PDF/A-OutputIntent der PDF-Berichte.",
+      "files": {
+        "sRGB-v2-micro.icc": "0a8a33aea66a6f154a5642ebe168ef287e73265d9f7b51c42a45e6eedbacda7a",
+        "LICENSE": "469d87b5fa48f8aaf69e25f4fcac3a309c97dbb7d561b917638abdb640e004d9"
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@anemo/beispiel-tictactoe",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Beispiel: BDD (Gherkin) + Playwright + Übergabe an Anemo",
+  "scripts": { "test": "playwright test", "start": "node bdd/serve.ts" }
+}

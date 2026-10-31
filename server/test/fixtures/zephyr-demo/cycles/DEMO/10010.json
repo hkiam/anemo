@@ -1,0 +1,47 @@
+{
+ "-1": {
+  "name": "Ad hoc",
+  "description": "",
+  "build": "",
+  "environment": "",
+  "startDate": "",
+  "endDate": "",
+  "versionId": 10010,
+  "versionName": "7.3",
+  "projectId": 10000,
+  "projectKey": "DEMO",
+  "createdBy": "mmustermann",
+  "createdByDisplay": "Max Mustermann",
+  "modifiedBy": "mmustermann",
+  "totalExecutions": 0,
+  "totalExecuted": 0,
+  "started": "",
+  "expand": "executionSummaries",
+  "executionSummaries": {
+   "executionSummary": []
+  }
+ },
+ "200": {
+  "name": "Regression 7.3",
+  "description": "Vollregression vor Freigabe",
+  "build": "7.3.0.117",
+  "environment": "ORA",
+  "startDate": "01/Sep/26",
+  "endDate": "15/Sep/26",
+  "versionId": 10010,
+  "versionName": "7.3",
+  "projectId": 10000,
+  "projectKey": "DEMO",
+  "createdBy": "mmustermann",
+  "createdByDisplay": "Max Mustermann",
+  "modifiedBy": "mmustermann",
+  "totalExecutions": 0,
+  "totalExecuted": 0,
+  "started": "",
+  "expand": "executionSummaries",
+  "executionSummaries": {
+   "executionSummary": []
+  }
+ },
+ "recordsCount": 2
+}

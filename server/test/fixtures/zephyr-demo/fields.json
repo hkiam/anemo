@@ -1,0 +1,54 @@
+[
+ {
+  "id": "summary",
+  "name": "Zusammenfassung",
+  "custom": false
+ },
+ {
+  "id": "description",
+  "name": "Beschreibung",
+  "custom": false
+ },
+ {
+  "id": "customfield_10100",
+  "name": "Epic Link",
+  "custom": true,
+  "schema": {
+   "type": "any",
+   "custom": "com.pyxis.greenhopper.jira:gh-epic-link"
+  }
+ },
+ {
+  "id": "customfield_10101",
+  "name": "Sprint",
+  "custom": true,
+  "schema": {
+   "type": "array",
+   "custom": "com.pyxis.greenhopper.jira:gh-sprint"
+  }
+ },
+ {
+  "id": "customfield_10200",
+  "name": "Testart",
+  "custom": true,
+  "schema": {
+   "type": "option"
+  }
+ },
+ {
+  "id": "customfield_10201",
+  "name": "Automatisierungsstatus",
+  "custom": true,
+  "schema": {
+   "type": "option"
+  }
+ },
+ {
+  "id": "customfield_10300",
+  "name": "Rang",
+  "custom": true,
+  "schema": {
+   "type": "any"
+  }
+ }
+]

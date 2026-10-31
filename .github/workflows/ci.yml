@@ -1,0 +1,40 @@
+# Prüfung für die öffentliche Fassung (GitHub): Typecheck und Tests gegen echte PostgreSQL.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: anemo
+          POSTGRES_PASSWORD: anemo
+          POSTGRES_DB: anemo
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U anemo" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://anemo:anemo@localhost:5432/anemo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      # Lizenzen, Schwachstellen der Laufzeitkomponenten, SBOM (CycloneDX/SPDX)
+      - run: node tools/third-party.ts all
+        env:
+          ANEMO_VERSION: ${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sbom
+          path: build/third-party/
+      - run: npm test

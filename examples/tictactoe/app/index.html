@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tic-Tac-Toe</title>
+  <style>
+    body { font: 18px system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #f5f6f8; }
+    main { display: grid; gap: 16px; justify-items: center; }
+    .brett { display: grid; grid-template-columns: repeat(3, 88px); gap: 6px; }
+    .brett button { width: 88px; height: 88px; font-size: 40px; font-weight: 700; border: 2px solid #c9ced6; border-radius: 10px; background: #fff; cursor: pointer; }
+    .brett button:disabled { cursor: default; }
+    .brett button.gewinn { background: #d7f5e1; border-color: #2e9d57; }
+    #status { min-height: 1.4em; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Tic-Tac-Toe</h1>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div class="brett" role="grid" aria-label="Spielbrett"></div>
+    <button id="neu" type="button">Neues Spiel</button>
+  </main>
+  <script type="module" src="spiel.js"></script>
+</body>
+</html>

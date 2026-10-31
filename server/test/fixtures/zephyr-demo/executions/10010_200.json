@@ -1,0 +1,144 @@
+{
+ "status": {
+  "1": {
+   "id": 1,
+   "name": "PASS",
+   "description": "Test was executed and passed successfully.",
+   "color": "#75B000",
+   "type": 0
+  },
+  "2": {
+   "id": 2,
+   "name": "FAIL",
+   "description": "Test was executed and failed.",
+   "color": "#CC3300",
+   "type": 0
+  },
+  "3": {
+   "id": 3,
+   "name": "WIP",
+   "description": "Test execution is a work-in-progress.",
+   "color": "#F2B000",
+   "type": 0
+  },
+  "4": {
+   "id": 4,
+   "name": "BLOCKED",
+   "description": "The test execution of this test was blocked for some reason.",
+   "color": "#6693B0",
+   "type": 0
+  },
+  "-1": {
+   "id": -1,
+   "name": "UNEXECUTED",
+   "description": "The test has not yet been executed.",
+   "color": "#A0A0A0",
+   "type": 0
+  },
+  "5": {
+   "id": 5,
+   "name": "PASS MIT EINSCHRÄNKUNG",
+   "description": "Bestanden, aber mit bekannter Abweichung.",
+   "color": "#9ACD32",
+   "type": 1
+  }
+ },
+ "executions": [
+  {
+   "id": 9001,
+   "orderId": 1,
+   "executionStatus": "1",
+   "executedOn": "03/Sep/26 10:15 AM",
+   "executedBy": "emusterfrau",
+   "executedByDisplay": "Erika Musterfrau",
+   "comment": "",
+   "htmlComment": "",
+   "cycleId": 200,
+   "cycleName": "x",
+   "issueId": 20001,
+   "issueKey": "DEMO-1",
+   "summary": "x",
+   "versionId": 10010,
+   "versionName": "x",
+   "projectId": 10000,
+   "projectKey": "DEMO",
+   "label": "",
+   "component": "",
+   "assignedTo": "",
+   "assignedToDisplay": "",
+   "defects": [],
+   "executionDefectCount": 0,
+   "stepDefectCount": 0,
+   "totalDefectCount": 0,
+   "creationDate": "01/Sep/26",
+   "createdBy": "mmustermann",
+   "canViewIssue": true
+  },
+  {
+   "id": 9002,
+   "orderId": 2,
+   "executionStatus": "2",
+   "executedOn": "03/Sep/26 2:30 PM",
+   "executedBy": "mmustermann",
+   "executedByDisplay": "Max Mustermann",
+   "comment": "Dashboard lädt nicht",
+   "htmlComment": "Dashboard lädt nicht",
+   "cycleId": 200,
+   "cycleName": "x",
+   "issueId": 20002,
+   "issueKey": "DEMO-2",
+   "summary": "x",
+   "versionId": 10010,
+   "versionName": "x",
+   "projectId": 10000,
+   "projectKey": "DEMO",
+   "label": "",
+   "component": "",
+   "assignedTo": "",
+   "assignedToDisplay": "",
+   "defects": [
+    {
+     "key": "DEMO-101",
+     "summary": "Dashboard bleibt leer",
+     "status": "Offen"
+    }
+   ],
+   "executionDefectCount": 1,
+   "stepDefectCount": 0,
+   "totalDefectCount": 1,
+   "creationDate": "01/Sep/26",
+   "createdBy": "mmustermann",
+   "canViewIssue": true
+  },
+  {
+   "id": 9003,
+   "orderId": 3,
+   "executionStatus": "5",
+   "executedOn": "04/Sep/26 9:00 AM",
+   "executedBy": "mmustermann",
+   "executedByDisplay": "Max Mustermann",
+   "comment": "Platzhaltersuche langsam (8 s)",
+   "htmlComment": "Platzhaltersuche langsam (8 s)",
+   "cycleId": 200,
+   "cycleName": "x",
+   "issueId": 20004,
+   "issueKey": "DEMO-4",
+   "summary": "x",
+   "versionId": 10010,
+   "versionName": "x",
+   "projectId": 10000,
+   "projectKey": "DEMO",
+   "label": "",
+   "component": "",
+   "assignedTo": "",
+   "assignedToDisplay": "",
+   "defects": [],
+   "executionDefectCount": 0,
+   "stepDefectCount": 0,
+   "totalDefectCount": 0,
+   "creationDate": "01/Sep/26",
+   "createdBy": "mmustermann",
+   "canViewIssue": true
+  }
+ ]
+}

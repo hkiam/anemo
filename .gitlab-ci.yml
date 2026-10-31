@@ -1,0 +1,75 @@
+# Schnelle Pipeline: kein Build-Schritt fürs Backend, Tests gegen echte PostgreSQL.
+stages: [check, test, package]
+
+default:
+  image: node:22-alpine
+  cache:
+    key: { files: [package-lock.json] }
+    paths: [.npm/]
+  before_script:
+    - npm ci --cache .npm --prefer-offline --no-audit --no-fund
+
+typecheck:
+  stage: check
+  script:
+    - npm run typecheck
+
+third-party:
+  stage: check
+  script:
+    # Lizenzen gegen config/third-party.json, bekannte Schwachstellen der Laufzeitkomponenten, SBOM (CycloneDX/SPDX)
+    - ANEMO_VERSION="$CI_COMMIT_SHORT_SHA" node tools/third-party.ts all
+  artifacts:
+    name: "sbom-$CI_COMMIT_SHORT_SHA"
+    paths: [build/third-party/]
+    expire_in: 1 year
+    when: always
+
+test:
+  stage: test
+  services:
+    - name: postgres:18-alpine
+      alias: db
+  variables:
+    POSTGRES_USER: anemo
+    POSTGRES_PASSWORD: anemo
+    POSTGRES_DB: anemo
+    TEST_DATABASE_URL: postgres://anemo:anemo@db:5432/anemo
+  script:
+    - npm test
+
+image:
+  stage: package
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script: []
+  cache: []
+  script:
+    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile "$CI_PROJECT_DIR/Dockerfile"
+      --build-arg ANEMO_VERSION="$CI_COMMIT_SHORT_SHA" --build-arg ANEMO_COMMIT="$CI_COMMIT_SHORT_SHA" --build-arg ANEMO_BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      --destination "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# SBOM des fertigen Images (Basis-Image mit Node.js und Systembibliotheken) zusätzlich zur Paket-SBOM
+image-sbom:
+  stage: package
+  needs: [image]
+  image:
+    name: anchore/syft:v1.18.1
+    entrypoint: [""]
+  before_script: []
+  cache: []
+  variables:
+    SYFT_REGISTRY_AUTH_AUTHORITY: $CI_REGISTRY
+    SYFT_REGISTRY_AUTH_USERNAME: $CI_REGISTRY_USER
+    SYFT_REGISTRY_AUTH_PASSWORD: $CI_REGISTRY_PASSWORD
+  script:
+    - mkdir -p build/image-sbom
+    - syft "registry:$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" -o cyclonedx-json=build/image-sbom/anemo-image.cdx.json -o spdx-json=build/image-sbom/anemo-image.spdx.json
+  artifacts:
+    paths: [build/image-sbom/]
+    expire_in: 1 year
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

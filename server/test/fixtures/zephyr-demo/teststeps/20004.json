@@ -1,0 +1,28 @@
+{
+ "stepBeanCollection": [
+  {
+   "id": 321,
+   "orderId": 1,
+   "step": "Aktenzeichen vollständig eingeben",
+   "data": "AZ 4711/26",
+   "result": "Genau ein Treffer",
+   "htmlStep": "<p>Aktenzeichen vollständig eingeben</p>",
+   "htmlData": "<p>AZ 4711/26</p>",
+   "htmlResult": "<p>Genau ein Treffer</p>",
+   "createdBy": "emusterfrau",
+   "modifiedBy": "emusterfrau"
+  },
+  {
+   "id": 322,
+   "orderId": 2,
+   "step": "Aktenzeichen mit Platzhalter eingeben",
+   "data": "AZ 4711*",
+   "result": "Alle passenden Akten werden gelistet",
+   "htmlStep": "<p>Aktenzeichen mit Platzhalter eingeben</p>",
+   "htmlData": "<p>AZ 4711*</p>",
+   "htmlResult": "<p>Alle passenden Akten werden gelistet</p>",
+   "createdBy": "emusterfrau",
+   "modifiedBy": "emusterfrau"
+  }
+ ]
+}

@@ -1,0 +1,182 @@
+/*
+ * Ergänzungen für Seiten und Komponenten (UX-Review Teil 2): Baumnavigation, Filter-Chips, Diagrammlegenden,
+ * Vorschlagslisten, Telefonansicht. Zentrale Bausteine (Farben, Menüs, Dialoge) stehen in styles.css.
+ */
+
+/* nur für Hilfstechnik sichtbar */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Ordnerbaum als Baum mit Tastatur (role="tree") */
+.tree-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.folder-toggle { display: none; }
+@media (max-width: 700px) {
+  .folder-toggle { display: inline-flex; }
+  .folder-pane.collapsed .folder-body { display: none; }
+  .folder-pane.collapsed .pane-head > :not(h3):not(.folder-toggle):not(.spacer) { display: none; }
+}
+
+/* aktive Filter als Chips */
+.filter-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.filter-explain { margin: 0 0 6px; }
+
+/* Vorschläge (Personen, Labels) und @-Erwähnungen */
+.suggest-chips, .mention-hints { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+/* Diagrammlegenden und Datentabellen als Alternative */
+.chart-legend { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 6px; }
+.chart-legend .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+.chart-legend .swatch.hatched { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.55) 0 2px, transparent 2px 5px); }
+.chart-data summary { cursor: pointer; }
+.chart-data table { font-size: 13px; }
+
+/* Massenbearbeitung: Auswahl und „Übernehmen“ als Paar */
+.bulk-pair { display: inline-flex; gap: 4px; align-items: center; }
+
+/* Startseite: breite Tabellen in Kacheln scrollen statt abzuschneiden */
+.start-grid .table-wrap { max-width: 100%; }
+
+/* Telefon: Zykluskopf kompakter, Liste beginnt früher */
+.cycle-head-extra-toggle { display: none; }
+@media (max-width: 700px) {
+  .cycle-head-extra-toggle { display: inline-flex; }
+  .cycle-head.compact .cycle-head-extra { display: none; }
+  .cycle-filters.compact .filterbar-extra { display: none; }
+}
+
+/* Schnellstatus: Statusfarben wie in Badges und Balken (execution_status.color), „Blockiert“ überall gleich */
+.quick-status .qs[style*="--qs-color"]:not(:disabled):hover { background: var(--qs-color); border-color: var(--qs-color); color: var(--qs-text, #fff); }
+.quick-status .qs.undo { font-size: 12.5px; }
+.plain-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+
+/* Konten: Einmal-Kennwort, Abschnitt Sicherheit im Benutzerdialog, Titel auf der Anmeldeseite */
+.one-time-password { font-size: 18px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-subtle, var(--bg)); letter-spacing: .04em; user-select: all; }
+.account-security { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+.login-title { font-size: 18px; margin: 4px 0; }
+
+/* Umschalter Ticket/Link in Verknüpfungsdialogen */
+.seg-tabs { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.seg-tabs > button { border: 0; border-radius: 0; background: transparent; min-height: 28px; padding: 0 12px; }
+.seg-tabs > button.on { background: var(--accent); color: var(--on-accent, #fff); }
+
+/* Werkzeugleiste unter Ergebnissen: einheitliche Knöpfe mit Symbol + Text */
+.tool-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; container-type: inline-size; }
+.tool-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: var(--ctl-pad); border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); color: var(--text); font: inherit; font-size: var(--ctl-fs); line-height: 1; cursor: pointer; white-space: nowrap; }
+/* Schmale Spalte (Schrittergebnis): nur Symbole in einer Zeile; Name bleibt für Screenreader und im Tooltip */
+@container (max-width: 340px) {
+  .tool-btn { padding: 0 9px; }
+  .tool-btn .tool-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+.tool-btn:hover { border-color: var(--accent); }
+.tool-btn:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tool-btn { position: relative; }
+.tool-btn.attention { border-color: var(--danger); color: var(--danger); }
+.tool-btn:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 767px) { .tool-btn { min-height: 34px; } }
+.tool-btn.attention .icon { filter: none; opacity: 1; }
+
+/* Kontextsensitive Hilfe: Seitenleiste rechts (nicht modal), „?“-Knöpfe an Dialogen und Bereichen */
+.app-row { display: flex; min-height: 0; min-width: 0; }
+.app-row > main { flex: 1; min-width: 0; }
+.help-panel { flex: none; width: 400px; display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--border);
+  background: var(--surface); position: relative; z-index: 11; box-shadow: -6px 0 18px rgba(10, 14, 20, .06); }
+.help-head { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.help-kicker { font-weight: 600; color: var(--muted); font-size: 13px; display: inline-flex; gap: 4px; align-items: center; }
+.help-search { padding: 8px 12px; border-bottom: 1px solid var(--border); display: grid; gap: 6px; }
+.help-matches { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 220px; overflow: auto; }
+.help-body { flex: 1; overflow: auto; padding: 12px 16px 16px; }
+.help-body h2 { font-size: 17px; margin: 0 0 8px; }
+.help-body h2:focus { outline: none; }
+.help-text { font-size: 13.5px; line-height: 1.5; }
+.help-text h3, .help-text h4 { font-size: 14px; margin: 14px 0 6px; text-transform: none; letter-spacing: 0; color: var(--text); }
+.help-text ul, .help-text ol { padding-left: 20px; }
+.help-text table { font-size: 12.5px; }
+.help-sub { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 18px 0 6px; }
+.help-foot { padding: 8px 16px; border-top: 1px solid var(--border); }
+.help-btn { min-height: 22px; min-width: 22px; padding: 0; border-radius: 50%; font-size: 12px; font-weight: 700; line-height: 1; justify-content: center;
+  color: var(--accent); border-color: var(--accent); background: var(--surface); margin-left: 6px; }
+.help-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+.help-toggle { min-width: 30px; justify-content: center; border-radius: 50%; padding: 4px; font-weight: 700; color: var(--accent); }
+.help-toggle.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.help-toggle .icon { filter: none; opacity: 1; }
+/* Schmale Fenster: Hilfe liegt über dem Inhalt */
+@media (max-width: 1000px) {
+  .help-panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); z-index: 30; box-shadow: var(--shadow); }
+}
+@media (pointer: coarse) { .help-btn { min-height: 30px; min-width: 30px; } }
+@media (min-width: 1001px) { body.help-open .modal-backdrop { right: 400px; } }
+
+/* Abschnitte (J1): Gruppenzeile in Schritttabellen, auf- und zuklappbar */
+tr.step-group > td { background: var(--surface-2); border-top: 2px solid var(--border); padding: 6px 8px; }
+.step-group-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.step-group-toggle { font-weight: 650; font-size: 14px; padding: 2px 6px; color: var(--text); }
+.step-group-toggle .caret { display: inline-block; width: 1em; color: var(--muted); }
+.step-group-title.muted { font-style: italic; font-weight: 500; }
+.step-group-sub { color: var(--muted); font-weight: 600; }
+.step-group-note { margin: 4px 0 0 28px; color: var(--muted); }
+.legacy-result { margin: 4px 0 0 28px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.step-groups-all { justify-content: flex-end; margin-bottom: 4px; }
+.bad-text { color: var(--danger); }
+tr.step-group.edit > td { border-top: 2px solid var(--accent); }
+
+/* Stufe J2: Umstellung auf neue Testfallfassung */
+table.kv th { text-align: left; font-weight: 600; color: var(--muted); padding: 3px 12px 3px 0; width: 140px; vertical-align: top; background: none; position: static; }
+table.kv td { padding: 3px 0; border: 0; }
+table.kv th { border: 0; }
+.prev-result { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+
+/* Stufe J3: Zellhistorie – dezente Markierung, sichtbar beim Überfahren bzw. per Tastatur; Hervorhebung „seit vN“ */
+.cell-meta { display: inline-flex; gap: 4px; align-items: center; margin-top: 4px; padding: 0 6px; min-height: 22px; border: 1px solid transparent;
+  background: transparent; color: var(--muted); font-size: 11.5px; border-radius: 4px; cursor: pointer; white-space: normal; text-align: left; max-width: 100%; }
+.cell-meta:hover, .cell-meta:focus-visible { border-color: var(--border); background: var(--surface-2); color: var(--text); }
+@media (hover: hover) and (pointer: fine) {
+  table.steps td .cell-meta { opacity: 0; }
+  table.steps tr:hover .cell-meta, table.steps td .cell-meta:focus-visible, table.steps td.cell-changed .cell-meta { opacity: 1; }
+}
+td.cell-changed { background: color-mix(in srgb, var(--warn, #b7791f) 12%, transparent); box-shadow: inset 3px 0 0 var(--warn, #b7791f); }
+.steps-tools { margin-bottom: 4px; min-height: 26px; }
+.steps-tools .step-groups-all { margin: 0; }
+ol.cell-history { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+ol.cell-history > li { border-left: 3px solid var(--border); padding-left: 10px; }
+.we-templates { flex-direction: column; align-items: stretch; min-width: 260px; max-width: 360px; gap: 2px; }
+.we-palette.we-templates > button { width: auto; height: auto; min-height: 26px; padding: 3px 8px; border-radius: 4px; background: transparent;
+  justify-content: flex-start; text-align: left; white-space: normal; font-size: 12.5px; color: var(--text); border: 1px solid transparent; }
+.we-palette.we-templates > button:hover { background: var(--surface-2); border-color: var(--border); }
+.tpl-preview { max-width: 360px; } .tpl-preview .wiki { max-height: 120px; overflow: hidden; }
+@media (pointer: coarse), (max-width: 767px) {
+  .cell-meta, .step-group-toggle, .help-btn { min-height: 30px; }
+  .help-btn { min-width: 30px; }
+}
+
+/* Verweise: eine Zeile je Ticket (Schlüssel · Titel · Schweregrad/Status · Aktionen), lange Listen filter- und einklappbar */
+.ref-group { display: grid; gap: 4px; }
+.ref-group-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.ref-group-head .seg-tabs { margin: 0; }
+.ref-group-head .seg-tabs > button { min-height: 26px; font-size: 12.5px; padding: 0 9px; }
+.ref-filter { width: 160px; padding: 3px 8px; font-size: 12.5px; }
+.ref-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+.ref-row { display: grid; grid-template-columns: minmax(110px, max-content) minmax(0, 1fr) auto auto; gap: 10px; align-items: center;
+  padding: 3px 4px 3px 10px; font-size: 13px; min-height: 30px; }
+.ref-row + .ref-row { border-top: 1px solid var(--border); }
+.ref-row.is-done .ref-title { color: var(--muted); }
+.ref-key { display: inline-flex; gap: 6px; align-items: baseline; white-space: nowrap; }
+.ref-provider { font-size: 11.5px; color: var(--muted); }
+.ref-title { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.35; }
+.ref-meta { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+.ref-status { font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+.ref-status.open { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.ref-status.rejected { text-decoration: none; font-style: italic; }
+.ref-actions .account > button { min-height: 26px; padding: 0 8px; }
+@media (max-width: 767px) {
+  .ref-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+  .ref-key { grid-column: 1; grid-row: 1; }
+  .ref-actions { grid-column: 2; grid-row: 1; }
+  .ref-title { grid-column: 1 / -1; grid-row: 2; white-space: normal; }
+  .ref-meta { grid-column: 1 / -1; grid-row: 3; }
+}
+
+.topbar > .help-toggle { justify-self: start; width: 30px; flex: none; }
+@media (pointer: coarse), (max-width: 767px) {
+  .ref-actions .account > button, .ref-group-head .seg-tabs > button { min-height: 30px; }
+}
+.app-version { display: block; padding: 6px 10px 2px; border-top: 1px solid var(--border); margin-top: 4px; text-decoration: none; }

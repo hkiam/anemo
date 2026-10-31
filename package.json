@@ -1,0 +1,29 @@
+{
+  "name": "anemo",
+  "version": "0.9.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Agentic QA Platform",
+  "workspaces": [
+    "server",
+    "web",
+    "e2e"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "node --run dev:db && (npm run dev -w server & npm run dev -w web & wait)",
+    "dev:db": "docker compose up -d db",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
+    "test": "npm test -w server && node --test \"shared/**/*.test.ts\" \"tools/**/*.test.ts\"",
+    "build": "node tools/third-party.ts all --audit-optional && npm run build -w web",
+    "third-party": "node tools/third-party.ts all",
+    "sbom": "node tools/third-party.ts sbom",
+    "zephyr:load": "node server/scripts/load-zephyr-dump.ts",
+    "migration:overview": "node --env-file-if-exists=.env server/scripts/migration-overview.ts",
+    "e2e": "npm run build -w web && npm test -w e2e",
+    "example:tictactoe": "playwright test -c examples/tictactoe",
+    "screenshots": "npm run build -w web && playwright test -c tools/screenshots"
+  }
+}
