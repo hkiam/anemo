@@ -1,5 +1,15 @@
 # Änderungen
 
+## Unveröffentlicht
+
+**Korrekturen**
+- MCP: `/.well-known/*` antwortet mit 404 (JSON) statt mit der Weboberfläche. MCP-Clients mit OAuth-Erkennung wie
+  `mcp-remote` (Claude Desktop) scheitern bei falschem oder abgelaufenem Token damit nachvollziehbar an der
+  OAuth-Erkennung statt an „Unexpected token '<'“; die Fehlersuche in `docs/mcp.md` nennt die Meldungen.
+
+**Dokumentation**
+- MCP-Einrichtung für Claude Desktop mit `mcp-remote` 0.15.2 getestet; Hinweise zu `--allow-http` und zu den Logs.
+
 ## 0.9.1 – 30.10.2026
 Behebt alle Befunde des Reviews vom 30.10.2026 (Sicherheit, Korrektheit, Fachlichkeit) sowie Darstellungsfehler mit
 Realdaten. Migration 040, Paketformat der Projektübertragung 1.3.

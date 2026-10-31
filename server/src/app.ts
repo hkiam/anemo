@@ -107,6 +107,9 @@ export function createApp(o: AppOptions): Hono {
 
   app.get('/api/openapi.json', (c) => c.json(openApiDocument())); // Schnittstellenbeschreibung ist öffentlich (keine Daten)
   app.all('/api/*', (c) => c.json({ status: 404, detail: 'Unbekannter Endpunkt' }, 404));
+  // Kein OAuth: Discovery-Anfragen (/.well-known/oauth-…) von MCP-Clients wie mcp-remote sauber mit 404 beantworten,
+  // statt index.html auszuliefern – sonst scheitern sie bei falschem Token an „Unexpected token '<'“ statt an 401
+  app.all('/.well-known/*', (c) => c.json({ status: 404, detail: 'Unbekannter Endpunkt' }, 404));
   // Dauerhafte Links (/go/…): relativ in die Oberfläche weiterleiten – sie löst das Ziel nach der Anmeldung auf
   app.get('/go/*', (c) => c.redirect(`/#${c.req.path}`, 302));
 

@@ -21,7 +21,7 @@ export interface TestEnv {
 }
 
 /** Eigene, frisch migrierte Datenbank je Testdatei – Tests laufen parallel und isoliert. */
-export async function testEnv(opts: { authMode?: AuthMode } = {}): Promise<TestEnv> {
+export async function testEnv(opts: { authMode?: AuthMode; webDist?: string } = {}): Promise<TestEnv> {
   const name = `anemo_test_${randomBytes(4).toString('hex')}`;
   const admin = connect(ADMIN_URL, { max: 1 });
   await admin.unsafe(`create database ${name}`);
@@ -29,7 +29,7 @@ export async function testEnv(opts: { authMode?: AuthMode } = {}): Promise<TestE
   url.pathname = `/${name}`;
   const db = connect(url.toString(), { max: 5 });
   await migrate(db);
-  const app = createApp({ db, attachmentDir: await mkdtemp(join(tmpdir(), 'anemo-att-')), snapshotRoot: FIXTURES_ROOT, authMode: opts.authMode ?? 'off' });
+  const app = createApp({ db, attachmentDir: await mkdtemp(join(tmpdir(), 'anemo-att-')), snapshotRoot: FIXTURES_ROOT, authMode: opts.authMode ?? 'off', webDist: opts.webDist });
   return {
     db,
     app,

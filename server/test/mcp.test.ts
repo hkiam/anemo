@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { type TestEnv, testEnv } from './helpers.ts';
 
@@ -69,5 +72,28 @@ describe('MCP-Server (D2)', () => {
     const s = await call('search', { query: 'Vertraulicher' });
     assert.ok(!s.text.includes('SEC-T1'));
     assert.equal((await env.call('GET', '/api/test-cases/SEC-T1')).status, 200, 'in der Oberfläche weiterhin sichtbar');
+  });
+});
+
+describe('MCP-Clients mit OAuth-Erkennung (mcp-remote)', () => {
+  let env: TestEnv;
+  before(async () => {
+    const dist = await mkdtemp(join(tmpdir(), 'anemo-web-'));
+    await writeFile(join(dist, 'index.html'), '<!doctype html><title>Anemo</title>');
+    env = await testEnv({ authMode: 'on', webDist: dist });
+  });
+  after(() => env.close());
+
+  it('/.well-known/* antwortet mit 404 als JSON statt index.html, die Oberfläche bleibt erreichbar', async () => {
+    for (const p of ['/.well-known/oauth-authorization-server', '/.well-known/oauth-protected-resource/api/mcp']) {
+      const res = await env.app.request(p);
+      assert.equal(res.status, 404, p);
+      assert.match(res.headers.get('content-type') ?? '', /application\/json/, p);
+    }
+    const mcp = await env.app.request('/api/mcp', { method: 'POST', body: '{}', headers: { 'content-type': 'application/json', authorization: 'Bearer anemo_falsch' } });
+    assert.equal(mcp.status, 401);
+    const spa = await env.app.request('/projekte/DEMO');
+    assert.equal(spa.status, 200);
+    assert.match(await spa.text(), /<title>Anemo<\/title>/);
   });
 });

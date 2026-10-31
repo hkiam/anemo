@@ -77,7 +77,8 @@ Konfiguration bearbeiten* öffnet `claude_desktop_config.json` (macOS: `~/Librar
 ```
 Danach Claude Desktop neu starten. `Authorization:${AUTH_HEADER}` ohne Leerzeichen schreiben – Claude Desktop unter
 Windows reicht Leerzeichen in Argumenten sonst falsch weiter. Bei einer Instanz ohne TLS (nur im lokalen Netz)
-zusätzlich `"--allow-http"` an die Argumente anhängen.
+zusätzlich `"--allow-http"` an die Argumente anhängen; für `http://localhost` ist das nicht nötig. Protokolle von
+mcp-remote stehen in den Logs von Claude Desktop (macOS: `~/Library/Logs/Claude/mcp-server-anemo.log`).
 
 > Die *Connectors* in den Einstellungen (benutzerdefinierter Connector per URL) eignen sich nur bedingt: Sie verbinden
 > sich aus der Cloud von Anthropic, die Instanz muss also aus dem Internet erreichbar sein, und feste Token-Header
@@ -159,10 +160,12 @@ vertrauenswürdig bestätigen (gespeichert in `~/.gemini/trustedFolders.json`).
 | 401 / „Bitte anmelden“ | Token fehlt, ist abgelaufen oder die Umgebungsvariable ist im Client nicht gesetzt (Desktop-Apps sehen Variablen aus `~/.zshrc` oft nicht – dann den Wert in `env` der Konfiguration eintragen) |
 | 403 „KI-Agenten sind in der Administration ausgeschaltet“ | *Administration → KI* → Schalter „KI-Agenten (MCP)“ einschalten (`AGENTS_ENABLED`) |
 | Server verbunden, aber Projekt fehlt | Token-Benutzer ist nicht Mitglied, oder das Projekt sperrt externe Dienste (eingeschränkte Projekte) |
+| mcp-remote: „Dynamic Client Registration rejected (HTTP 404)“, danach „SSE error: Non-200 status code (405)“ | Token falsch oder abgelaufen: Anemo antwortet mit 401, mcp-remote versucht daraufhin OAuth, das Anemo nicht anbietet. Token und `AUTH_HEADER` (`Bearer …`) prüfen. Ältere Anemo-Versionen melden stattdessen „Unexpected token '<' … is not valid JSON“ |
 | Client versucht OAuth bzw. SSE | Client unterstützt kein Streamable HTTP mit festen Headern → Brücke `mcp-remote` verwenden |
 
-Getestet am 31.10.2026 mit Claude Code 2.1, Codex CLI 0.154, OpenCode 1.17 und Gemini CLI 0.55 (Verbindung und
-Werkzeugaufruf). Claude Desktop, pi, Cursor und VS Code sind nach deren Dokumentation beschrieben.
+Getestet am 31.10.2026 mit Claude Code 2.1, Codex CLI 0.154, OpenCode 1.17, Gemini CLI 0.55 und mcp-remote 0.15.2
+(Brücke für Claude Desktop, mit der Konfiguration oben; Verbindung und Werkzeugaufruf). pi, Cursor und VS Code sind
+nach deren Dokumentation beschrieben.
 
 ## Werkzeuge
 | Werkzeug | Zweck |
