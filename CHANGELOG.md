@@ -1,8 +1,12 @@
 # Änderungen
 
-## Unveröffentlicht
+## 0.9.2 – 10.11.2026
+Korrekturen aus dem Testbetrieb, keine Migration.
 
 **Korrekturen**
+- Test-Health: Beim Wechsel zwischen den Analysen („Ähnliche Testfälle“, „Fehlerursachen“, „Anforderungsabdeckung“)
+  stürzte die Ansicht sporadisch mit „Cannot read properties of undefined (reading 'length')“ ab – die neue Analyse
+  zeichnete bis zur Antwort des Servers kurz die Daten der vorigen.
 - MCP: `/.well-known/*` antwortet mit 404 (JSON) statt mit der Weboberfläche. MCP-Clients mit OAuth-Erkennung wie
   `mcp-remote` (Claude Desktop) scheitern bei falschem oder abgelaufenem Token damit nachvollziehbar an der
   OAuth-Erkennung statt an „Unexpected token '<'“; die Fehlersuche in `docs/mcp.md` nennt die Meldungen.

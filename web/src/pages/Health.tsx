@@ -57,7 +57,7 @@ export function Health({ projectKey, route }: { projectKey: string; route: Route
           ))}
         </div>
       </div>
-      {ANALYSES.some(([id]) => id === active) ? <div className="pane stack" style={{ overflow: 'auto', padding: 16 }}><Analysis projectKey={projectKey} id={active} /></div> :
+      {ANALYSES.some(([id]) => id === active) ? <div className="pane stack" style={{ overflow: 'auto', padding: 16 }}><Analysis key={`${projectKey}:${active}`} projectKey={projectKey} id={active} /></div> :
       <div className="pane stack" style={{ overflow: 'auto', padding: 16 }}>
         <ErrorNote error={error ?? h.error} />
         {done && <div className="notice ok">{done}</div>}
@@ -98,6 +98,8 @@ const ANALYSES: [string, string, string][] = [
   ['coverage', 'Anforderungsabdeckung', 'Verknüpfte Anforderungen × letzte Ergebnisse'],
 ];
 
+// Je Analyse eine eigene Instanz (key): useApi behält beim Adresswechsel die alten Daten bis zur neuen Antwort – die
+// nächste Analyse würde sonst kurz die Daten der vorigen mit anderem Aufbau zeichnen und abstürzen
 function Analysis({ projectKey, id }: { projectKey: string; id: string }) {
   const [min, setMin] = useState(0.6);
   const [days, setDays] = useState(180);
