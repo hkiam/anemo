@@ -27,7 +27,14 @@ Zuordnungen einer Anbindung stehen auf einer Seite.
 ## Benutzer
 *Administration → Benutzer*
 - **+ Benutzer**: lokales Konto mit Einmal-Kennwort oder vorgegebenem Anfangskennwort (siehe unten).
-  Konten aus SSO/LDAP entstehen bei der ersten Anmeldung automatisch.
+  Konten aus SSO/LDAP entstehen bei der ersten Anmeldung automatisch. Unter **Anmeldung** lässt sich ein SSO- bzw.
+  LDAP-Konto auch **vorbereiten** (ohne Kennwort): Rechte, Gruppen und Projekte gelten dann schon bei der ersten Anmeldung
+  mit genau diesem Benutzernamen.
+- **Anmeldeart umstellen** (Bearbeiten → *Auf SSO-Anmeldung umstellen …* bzw. *Auf lokales Kennwort umstellen …*): für
+  Personen, die schon ein lokales Konto haben. Die nächste SSO-Anmeldung mit demselben Benutzernamen übernimmt das Konto
+  mit Rechten, Gruppen, Historie und **API-Tokens** (MCP, CI laufen weiter). Das bisherige Kennwort gilt nicht mehr,
+  Sitzungen enden. Zurück auf lokal gibt es ein Einmal-Kennwort. Das eigene Konto und der letzte aktive lokale
+  Systemadministrator (Notzugang) lassen sich nicht umstellen.
 - **Bearbeiten**: Name, E-Mail, Systemadministrator, **Projekte übertragen** (siehe unten), **🤖 KI-Agent**
   (Ergebnisse brauchen QA-Freigabe), aktiv. Deaktivierte Konten können sich nicht anmelden, ihre Sitzungen enden sofort.
 - Schutz: Das eigene Konto lässt sich nicht deaktivieren, und der letzte aktive Systemadministrator bleibt

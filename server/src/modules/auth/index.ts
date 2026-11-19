@@ -12,7 +12,7 @@ import { adminResetPassword, adminSendResetLink, checkReset, confirmReset, endSe
 import { minPasswordLength, randomPassword } from './password.ts';
 import { can, effectiveRole, hasPermission, loadPrincipal, type Permission, PERMISSIONS, type Principal, type ProjectRef, resolveProject, type Role, visibleProjectIds } from './access.ts';
 import {
-  changeOwnPassword, createGroup, listPermissionGrants, setPermission, createUser, deleteGroup, getUser, listGroups, listProjectMembers, listUsers, login, logout,
+  changeOwnPassword, changeUserSource, createExternalUser, createGroup, listPermissionGrants, setPermission, createUser, deleteGroup, getUser, listGroups, listProjectMembers, listUsers, login, logout,
   sessionUser, setPassword, createSession, createApiToken, deleteApiToken, listApiTokens, tokenUser, setProjectMember, setProjectVisibility, updateGroup, updateUser,
 } from './service.ts';
 
@@ -328,8 +328,10 @@ export function authRoutes(app: Hono, db: Db, mode: AuthMode): void {
     body: z.object({
       username: z.string(), displayName: z.string().min(1), email: z.string().email().nullish(), password: z.string().max(256).optional(),
       generatePassword: z.boolean().optional(), mustChangePassword: z.boolean().optional(), isSystemAdmin: z.boolean().optional(), isAgent: z.boolean().optional(),
+      source: z.enum(['local', 'oidc', 'ldap']).optional().describe('oidc/ldap: Konto ohne Kennwort vorbereiten; die erste Anmeldung mit diesem Benutzernamen übernimmt es'),
     }),
   }, ({ body }) => inTx(db, async (tx) => {
+    if (body.source && body.source !== 'local') return { ...await createExternalUser(tx, { ...body, source: body.source }), password: null };
     if (!body.password && !body.generatePassword) throw new HttpError(400, 'Kennwort angeben oder Einmal-Kennwort erzeugen lassen.');
     const password = body.generatePassword ? randomPassword() : body.password!;
     const u = await createUser(tx, { ...body, password, mustChangePassword: body.mustChangePassword ?? !!body.generatePassword });
@@ -340,6 +342,14 @@ export function authRoutes(app: Hono, db: Db, mode: AuthMode): void {
     method: 'patch', path: '/api/admin/users/:id', tag: atag, summary: 'Benutzer ändern (Name, E-Mail, aktiv, Systemadmin)', access: 'admin',
     body: z.object({ displayName: z.string().min(1).optional(), email: z.string().email().nullish(), active: z.boolean().optional(), isSystemAdmin: z.boolean().optional(), isAgent: z.boolean().optional() }),
   }, ({ params, body, c }) => inTx(db, (tx) => updateUser(tx, params.id!, body, principalOf(c)?.userId ?? null)));
+  route(app, {
+    method: 'put', path: '/api/admin/users/:id/source', tag: atag, access: 'admin',
+    summary: 'Anmeldeart umstellen (lokal ↔ SSO/LDAP); Rechte, Gruppen, Historie und API-Tokens bleiben. Nach SSO/LDAP übernimmt die nächste Anmeldung mit demselben Benutzernamen das Konto; nach lokal Einmal-Kennwort (nur in der Antwort)',
+    body: z.object({ source: z.enum(['local', 'oidc', 'ldap']) }),
+  }, async ({ params, body, c, actor }) => {
+    const r = await inTx(db, (tx) => changeUserSource(tx, params.id!, body.source, principalOf(c)?.userId ?? null, actor));
+    return { ...r.user, password: r.password };
+  });
   route(app, {
     method: 'put', path: '/api/admin/users/:id/password', tag: atag, access: 'admin',
     summary: 'Kennwort zurücksetzen: vorgegeben oder Einmal-Kennwort (nur in der Antwort), optional Pflichtwechsel und Widerruf der API-Tokens; beendet alle Sitzungen',

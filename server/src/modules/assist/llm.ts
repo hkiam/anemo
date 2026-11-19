@@ -80,6 +80,15 @@ export function setLlmFetch(f: Fetch | null): void {
   http = f ?? fetch;
 }
 
+/** Antwort an der Längengrenze abgeschnitten (bei Reasoning-Modellen zählt die Denkphase mit). */
+export class TruncatedError extends Error {
+  readonly maxTokens: number;
+  constructor(maxTokens: number) { super(`KI-Antwort an der Längengrenze (${maxTokens} Tokens) abgeschnitten`); this.maxTokens = maxTokens; }
+}
+
+/** Längengrenze für den zweiten Versuch: Denkphase von Reasoning-Modellen braucht oft mehr als die Antwort selbst. */
+export const retryTokens = (maxTokens: number) => Math.min(16_000, Math.max(4000, maxTokens * 3));
+
 /** Eine Anfrage (System + Nutzertext) → Antworttext. JSON-Antworten werden über den Prompt angefordert. */
 export async function complete(cfg: LlmConfig, system: string, user: string, maxTokens = 2000): Promise<string> {
   if (cfg.provider === 'anthropic') {
@@ -88,8 +97,9 @@ export async function complete(cfg: LlmConfig, system: string, user: string, max
       headers: { 'content-type': 'application/json', 'x-api-key': cfg.apiKey ?? '', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({ model: cfg.model, max_tokens: maxTokens, ...cfg.extraBody, system, messages: [{ role: 'user', content: user }] }),
     });
-    const d = (await res.json().catch(() => ({}))) as { content?: { type: string; text?: string }[]; error?: { message: string } };
+    const d = (await res.json().catch(() => ({}))) as { content?: { type: string; text?: string }[]; stop_reason?: string; error?: { message: string } };
     if (!res.ok) throw new Error(`KI-Modell: ${d.error?.message ?? res.status}`);
+    if (d.stop_reason === 'max_tokens') throw new TruncatedError(maxTokens);
     return stripThinking((d.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join(''));
   }
   const res = await http(`${cfg.baseUrl}/chat/completions`, {
@@ -97,8 +107,9 @@ export async function complete(cfg: LlmConfig, system: string, user: string, max
     headers: { 'content-type': 'application/json', ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}`, 'api-key': cfg.apiKey } : {}) },
     body: JSON.stringify({ model: cfg.model, max_tokens: maxTokens, temperature: 0.2, ...cfg.extraBody, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
   });
-  const d = (await res.json().catch(() => ({}))) as { choices?: { message?: { content?: string } }[]; error?: { message: string } };
+  const d = (await res.json().catch(() => ({}))) as { choices?: { message?: { content?: string }; finish_reason?: string }[]; error?: { message: string } };
   if (!res.ok) throw new Error(`KI-Modell: ${d.error?.message ?? res.status}`);
+  if (d.choices?.[0]?.finish_reason === 'length') throw new TruncatedError(maxTokens);
   // vLLM mit --reasoning-parser liefert die Denkphase getrennt (reasoning_content), sonst steht sie als <think> im Text
   return stripThinking(d.choices?.[0]?.message?.content ?? '');
 }
@@ -122,7 +133,14 @@ export async function ask(db: Db, cfg: LlmConfig, meta: AskMeta, system: string,
     });
   }
   try {
-    const out = await complete(cfg, system, user, maxTokens);
+    let out: string;
+    try {
+      out = await complete(cfg, system, user, maxTokens);
+    } catch (e) {
+      // einmal mit mehr Spielraum wiederholen (Reasoning-Modelle wie Qwen3, DeepSeek-R1, gpt-oss denken unterschiedlich lange)
+      if (!(e instanceof TruncatedError)) throw e;
+      out = await complete(cfg, system, user, retryTokens(maxTokens));
+    }
     if (reserved) await db`update ai_call_log set response_chars = ${out.length}, duration_ms = ${Date.now() - t0}, ok = true, error = null where id = ${reserved}`;
     else await db`insert into ai_call_log(actor, project_id, feature, model, prompt_chars, response_chars, duration_ms, ok)
              values (${meta.actor}, ${meta.projectId}, ${meta.feature}, ${cfg.model}, ${system.length + user.length}, ${out.length}, ${Date.now() - t0}, true)`;
@@ -132,7 +150,13 @@ export async function ask(db: Db, cfg: LlmConfig, meta: AskMeta, system: string,
     if (reserved) await db`update ai_call_log set duration_ms = ${Date.now() - t0}, ok = false, error = ${msg} where id = ${reserved}`.catch(() => {});
     else await db`insert into ai_call_log(actor, project_id, feature, model, prompt_chars, duration_ms, ok, error)
              values (${meta.actor}, ${meta.projectId}, ${meta.feature}, ${cfg.model}, ${system.length + user.length}, ${Date.now() - t0}, false, ${msg})`.catch(() => {});
-    throw e;
+    if (e instanceof HttpError) throw e;
+    if (e instanceof TruncatedError) {
+      throw new HttpError(502, `Die KI-Antwort war auch mit ${e.maxTokens} Tokens noch nicht fertig und wurde abgeschnitten. Bitte erneut versuchen; `
+        + 'bei Reasoning-Modellen hilft es, die Denkphase zu begrenzen (Administration → KI → Zusätzliche Anfrageparameter).');
+    }
+    const timeout = (e as Error).name === 'TimeoutError' || (e as Error).name === 'AbortError';
+    throw new HttpError(502, timeout ? `Das KI-Modell (${cfg.model}) hat nicht innerhalb von 2 Minuten geantwortet.` : `KI-Modell nicht nutzbar: ${msg}`);
   }
 }
 
@@ -141,5 +165,9 @@ export function parseJson<T>(text: string): T {
   const m = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
   const raw = (m ? m[1]! : text).trim();
   const start = raw.search(/[[{]/);
-  return JSON.parse(start > 0 ? raw.slice(start) : raw) as T;
+  try {
+    return JSON.parse(start > 0 ? raw.slice(start) : raw) as T;
+  } catch {
+    throw new HttpError(502, raw ? 'Die KI-Antwort hatte nicht das erwartete Format (kein gültiges JSON) – bitte erneut versuchen.' : 'Die KI hat eine leere Antwort geliefert – bitte erneut versuchen.');
+  }
 }

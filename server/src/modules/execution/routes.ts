@@ -6,7 +6,7 @@ import type { Context } from 'hono';
 import { EventTypes, recordChange, recordEvent } from '../events/index.ts';
 import { getProject } from '../projects/index.ts';
 import { validateCustomFields } from '../fields/index.ts';
-import { getTestCase, getTestSet, resolveTestSet } from '../testcases/index.ts';
+import { getTestCase, getTestSet, resolveTestSet, searchTestCases } from '../testcases/index.ts';
 import { HttpUrl, SEVERITIES } from '../references/index.ts';
 import {
   addTestsToCycle, bulkAssign, createCycle, resultHistory, createPlan, deletePlan, updatePlan, cycleFacets, executeTest, executionHistory, getCycle, getExecution,
@@ -64,6 +64,30 @@ const CycleBody = z.object({
   /** Eigene Felder (Stufe H5); übernommene Werte bleiben erhalten */
   customFields: z.record(z.string(), z.unknown()).optional(),
 });
+
+/** Höchstzahl Testfälle, die per Abfrage bzw. Testset auf einmal in einen Zyklus aufgenommen werden. */
+const MAX_BULK_ADD = 5000;
+
+/** Testfall-IDs einer Projektabfrage (AQL) für den Zyklus; mehr als {@link MAX_BULK_ADD} Treffer → 400. */
+async function aqlIds(db: Db, cycleId: string, aql: string, actor: string): Promise<string[]> {
+  const { projectId } = await getCycle(db, cycleId);
+  const ids: string[] = [];
+  for (let offset = 0; ; offset += 500) {
+    const page = await searchTestCases(db, { projectId, aql, actor, limit: 500, offset });
+    if (page.total > MAX_BULK_ADD) throw badRequest(`Die Abfrage liefert ${page.total} Testfälle – höchstens ${MAX_BULK_ADD} auf einmal. Abfrage eingrenzen oder in mehreren Schritten aufnehmen.`);
+    ids.push(...page.items.map((t) => t.id));
+    if (ids.length >= page.total || !page.items.length) return ids;
+  }
+}
+
+/** Testfall-IDs eines Testsets desselben Projekts; mehr als {@link MAX_BULK_ADD} → 400. */
+async function testSetIds(db: Db, cycleId: string, testSetId: string): Promise<string[]> {
+  const cycle = await getCycle(db, cycleId);
+  const set = await getTestSet(db, testSetId);
+  if (set.projectId !== cycle.projectId) throw badRequest('Testset gehört zu einem anderen Projekt');
+  const tcs = await resolveTestSet(db, set, { max: MAX_BULK_ADD, strict: true });
+  return tcs.map((t) => t.id);
+}
 
 export function executionRoutes(app: Hono, db: Db): void {
   const tag = 'Planung & Ausführung';
@@ -189,13 +213,10 @@ export function executionRoutes(app: Hono, db: Db): void {
   }));
   route(app, {
     method: 'post', path: '/api/cycles/:id/executions/from-test-set', access: { level: 'edit', project: ({ params }) => ({ kind: 'cycle', id: params.id! }) }, tag,
-    summary: 'Alle Testfälle eines Testsets in den Zyklus aufnehmen (ohne Größengrenze, bereits enthaltene werden übersprungen)', body: z.object({ testSetId: z.uuid() }),
+    summary: `Alle Testfälle eines Testsets in den Zyklus aufnehmen (bis ${MAX_BULK_ADD}, bereits enthaltene werden übersprungen)`, body: z.object({ testSetId: z.uuid() }),
   }, ({ params, body, actor }) => inTx(db, async (tx) => {
-    const cycle = await getCycle(tx, params.id!);
-    const set = await getTestSet(tx, body.testSetId);
-    if (set.projectId !== cycle.projectId) throw badRequest('Testset gehört zu einem anderen Projekt');
-    const tcs = await resolveTestSet(tx, set);
-    return { ...(await addTestsToCycle(tx, params.id!, tcs.map((t) => t.id), actor)), total: tcs.length };
+    const ids = await testSetIds(tx, params.id!, body.testSetId);
+    return { ...(await addTestsToCycle(tx, params.id!, ids, actor)), total: ids.length };
   }));
   route(app, { method: 'delete', path: '/api/plans/:id', access: { level: 'edit', project: ({ params }) => ({ kind: 'plan', id: params.id! }) }, tag, summary: 'Leeren Testplan löschen (409, solange Zyklen zugeordnet sind)', status: 204 },
     async ({ params }) => { await inTx(db, (tx) => deletePlan(tx, params.id!)); });
@@ -364,9 +385,20 @@ export function executionRoutes(app: Hono, db: Db): void {
     return bulkAssign(tx, body.ids, body.assignee, actor);
   }));
   route(app, {
-    method: 'post', path: '/api/cycles/:id/executions', access: { level: 'edit', project: ({ params }) => ({ kind: 'cycle', id: params.id! }) }, tag, summary: 'Testfälle (aktuelle Version) in Zyklus aufnehmen',
-    body: z.object({ testCaseIds: z.array(z.string()).min(1).max(1000) }),
-  }, ({ params, body, actor }) => inTx(db, (tx) => addTestsToCycle(tx, params.id!, body.testCaseIds, actor)));
+    method: 'post', path: '/api/cycles/:id/executions', access: { level: 'edit', project: ({ params }) => ({ kind: 'cycle', id: params.id! }) }, tag,
+    summary: `Testfälle (aktuelle Version) in Zyklus aufnehmen – genau eines von: testCaseIds (IDs/Schlüssel, bis 1000), aql (Projektabfrage) oder testSetId (je bis ${MAX_BULK_ADD})`,
+    body: z.object({
+      testCaseIds: z.array(z.string()).min(1).max(1000).optional().describe('Testfall-IDs oder -Schlüssel (z. B. DEMO-T12)'),
+      aql: z.string().trim().min(1).max(4000).optional().describe('Abfrage (AQL) über die Testfälle des Projekts, z. B. label = "automatisiert"'),
+      testSetId: z.uuid().optional().describe('Testset des Projekts (statisch oder dynamisch)'),
+    }),
+  }, ({ params, body, actor }) => inTx(db, async (tx) => {
+    const given = (['testCaseIds', 'aql', 'testSetId'] as const).filter((k) => body[k] !== undefined);
+    if (given.length !== 1) throw badRequest('Genau eines angeben: testCaseIds, aql oder testSetId');
+    if (body.testCaseIds) return addTestsToCycle(tx, params.id!, body.testCaseIds, actor);
+    const ids = body.aql ? await aqlIds(tx, params.id!, body.aql, actor) : await testSetIds(tx, params.id!, body.testSetId!);
+    return { ...(await addTestsToCycle(tx, params.id!, ids, actor)), total: ids.length };
+  }));
 
   route(app, {
     method: 'post', path: '/api/cycles/:id/repeat', access: { level: 'edit', project: ({ params }) => ({ kind: 'cycle', id: params.id! }) }, tag,

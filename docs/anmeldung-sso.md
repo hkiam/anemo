@@ -26,7 +26,8 @@ OIDC_CLIENT_ID=anemo
 OIDC_CLIENT_SECRET=<Client-Secret>
 OIDC_GROUPS_CLAIM=groups                 # oder: groups,realm_access.roles,resource_access.anemo.roles
 OIDC_GROUPS_FULL_PATH=false              # true: "/IT/QA" statt "QA"
-OIDC_ADMIN_GROUP=anemo-admins            # Mitglieder werden Systemadministratoren (optional)
+OIDC_ADMIN_GROUP=anemo-admins            # optional: Mitglieder werden Systemadministratoren – gesetzt bestimmt die Gruppe
+                                         # das Adminrecht bei JEDER Anmeldung; ohne wird es in Anemo vergeben
 OIDC_LABEL=Mit Firmenkonto anmelden
 ```
 

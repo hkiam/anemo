@@ -114,7 +114,17 @@ export function createApp(o: AppOptions): Hono {
   app.get('/go/*', (c) => c.redirect(`/#${c.req.path}`, 302));
 
   if (o.webDist) {
+    // Zwischenspeichern: Dateien unter /assets/ tragen einen Inhalts-Hash im Namen (unveränderlich); alles andere – vor
+    // allem index.html – muss der Browser jedes Mal prüfen. Sonst lädt er nach einem Update (z. B. beim Rücksprung von
+    // der SSO-Anmeldung) eine alte index.html, deren Skript es nicht mehr gibt → weiße Seite.
+    app.use('/*', async (c, next) => {
+      await next();
+      if (c.req.path.startsWith('/api/') || !c.res.ok || c.res.headers.has('Cache-Control')) return;
+      c.header('Cache-Control', c.req.path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache');
+    });
     app.use('/*', serveStatic({ root: o.webDist }));
+    // fehlende Bausteine nie durch index.html ersetzen (der Browser meldete sonst „MIME type text/html“)
+    app.get('/assets/*', (c) => c.text('Nicht gefunden', 404));
     // SPA-Fallback: unbekannte Pfade liefern index.html
     app.get('/*', serveStatic({ root: o.webDist, path: 'index.html' }));
   }

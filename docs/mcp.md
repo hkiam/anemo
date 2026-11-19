@@ -181,7 +181,7 @@ nach deren Dokumentation beschrieben.
 | `create_project` | Projekt anlegen (Systemadministration) |
 | `create_test_case`, `update_test_case` | Testfall anlegen bzw. ändern (neue Version; nur angegebene Felder ändern sich). Schritte als `{action, data, expected}`, Abschnitte als `{section}` |
 | `set_test_case_status` | Status (Workflow), Ordner, Verantwortliche, Schätzung – ohne neue Version |
-| `create_plan`, `add_tests_to_cycle`, `assign_executions` | Testplan anlegen, Testfälle in einen Zyklus aufnehmen, Ausführungen zuweisen |
+| `create_plan`, `add_tests_to_cycle`, `assign_executions` | Testplan anlegen, Testfälle in einen Zyklus aufnehmen (Schlüssel, `aql` oder `testSetId`, bis 5000), Ausführungen zuweisen |
 | `api_operations` | **alle** Funktionen finden (Text, Bereich) bzw. Parameter und Eingabeschema einer Funktion anzeigen |
 | `api_call` | **jede** Funktion aufrufen, z. B. `PUT /api/projects/DEMO/members`, `POST /api/admin/users`, `GET /api/reports/completion/<plan>?format=md` |
 

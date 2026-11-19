@@ -92,6 +92,28 @@ function UserEditor({ user, self, onClose, onSaved, onDone }: { user: AdminUser 
   const [created, setCreated] = useState<{ username: string; password: string } | null>(null);
   const [resetting, setResetting] = useState(false);
   const transfer = useTransferPermission('user', user?.id);
+  const providers = useApi<{ ldap: boolean; oidc: { label: string } | null }>('/api/auth/providers');
+  const external: ('oidc' | 'ldap')[] = [...(providers.data?.oidc ? ['oidc' as const] : []), ...(providers.data?.ldap ? ['ldap' as const] : [])];
+  const [source, setSource] = useState<'local' | 'oidc' | 'ldap'>('local');
+
+  async function switchSource(target: 'local' | 'oidc' | 'ldap') {
+    if (!user) return;
+    const toLocal = target === 'local';
+    const ok = await askConfirm({
+      title: toLocal ? 'Auf lokales Kennwort umstellen' : `Auf ${SOURCE[target]}-Anmeldung umstellen`,
+      message: toLocal
+        ? `„${user.username}“ meldet sich danach mit einem Einmal-Kennwort an (wird gleich angezeigt) und legt ein eigenes fest. Rechte, Gruppen und API-Tokens bleiben; laufende Sitzungen enden.`
+        : `„${user.username}“ meldet sich danach über ${target === 'oidc' ? `„${providers.data?.oidc?.label ?? 'SSO'}“` : 'das Verzeichnis (LDAP)'} an. Die erste Anmeldung mit dem Benutzernamen „${user.username}“ übernimmt das Konto mit allen Rechten, Gruppen, der Historie und den API-Tokens. Das bisherige Kennwort gilt nicht mehr, laufende Sitzungen enden.`,
+      confirmLabel: 'Umstellen',
+    });
+    if (!ok) return;
+    try {
+      const r = await api<AdminUser & { password: string | null }>('PUT', `/api/admin/users/${user.id}/source`, { source: target });
+      onSaved();
+      if (r.password) setCreated({ username: r.username, password: r.password });
+      else { toast(`${user.username} meldet sich jetzt über ${SOURCE[target]} an`); onDone(); }
+    } catch (e) { setError(e); }
+  }
 
   async function save() {
     setError(null);
@@ -99,7 +121,7 @@ function UserEditor({ user, self, onClose, onSaved, onDone }: { user: AdminUser 
       if (!user) {
         const r = await api<AdminUser & { password: string | null }>('POST', '/api/admin/users', {
           username, displayName, email: email || null, isSystemAdmin, isAgent,
-          ...(pwMode === 'generate' ? { generatePassword: true } : { password }), mustChangePassword: mustChange,
+          ...(source !== 'local' ? { source } : { ...(pwMode === 'generate' ? { generatePassword: true } : { password }), mustChangePassword: mustChange }),
         });
         await transfer.commit(r.id);
         onSaved();
@@ -121,14 +143,21 @@ function UserEditor({ user, self, onClose, onSaved, onDone }: { user: AdminUser 
   return (
     <Modal title={user ? `Benutzer ${user.username}` : 'Neuer Benutzer'} help="admin-users" size="large" onClose={onClose}
       footer={<><button onClick={onClose}>Abbrechen</button><button className="primary" onClick={save}
-        disabled={!username || !displayName || (!user && pwMode === 'set' && !password)}>{user ? 'Speichern' : 'Anlegen'}</button></>}>
+        disabled={!username || !displayName || (!user && source === 'local' && pwMode === 'set' && !password)}>{user ? 'Speichern' : 'Anlegen'}</button></>}>
       <ErrorNote error={error} />
       <div className="grid2">
         <label className="field">Benutzername<input value={username} onChange={(e) => setUsername(e.target.value)} disabled={!!user} autoFocus={!user} /></label>
         <label className="field">Anzeigename<input value={displayName} onChange={(e) => setDisplayName(e.target.value)} /></label>
         <label className="field">E-Mail<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <span className="small muted">für Benachrichtigungen, Sicherheitshinweise und Links zum Zurücksetzen</span></label>
-        {!user && <fieldset className="field">
+        {!user && external.length > 0 && <label className="field">Anmeldung
+          <select value={source} onChange={(e) => setSource(e.target.value as typeof source)}>
+            <option value="local">lokales Kennwort</option>
+            {external.map((s) => <option key={s} value={s}>{s === 'oidc' ? `SSO (${providers.data?.oidc?.label ?? 'Identitätsanbieter'})` : 'Verzeichnis (LDAP)'}</option>)}
+          </select>
+          {source !== 'local' && <span className="small muted">Kein Kennwort in Anemo. Die erste Anmeldung mit genau diesem Benutzernamen übernimmt das Konto mit den hier vergebenen Rechten.</span>}
+        </label>}
+        {!user && source === 'local' && <fieldset className="field">
           <legend>Erstes Kennwort</legend>
           <label className="row"><input type="radio" name="pwmode" checked={pwMode === 'generate'} onChange={() => setPwMode('generate')} style={{ width: 'auto' }} /> Einmal-Kennwort erzeugen (wird einmal angezeigt)</label>
           <label className="row"><input type="radio" name="pwmode" checked={pwMode === 'set'} onChange={() => setPwMode('set')} style={{ width: 'auto' }} /> Kennwort festlegen</label>
@@ -163,8 +192,13 @@ function UserEditor({ user, self, onClose, onSaved, onDone }: { user: AdminUser 
             {locked(user) && <button onClick={async () => {
               try { await api('POST', `/api/admin/users/${user.id}/unlock`); toast(`${user.username} entsperrt`); onSaved(); onDone(); } catch (e) { setError(e); }
             }}>Entsperren</button>}
+            {!self && external.map((s) => <button key={s} title={s === 'oidc' ? providers.data?.oidc?.label : undefined} onClick={() => switchSource(s)}>Auf {s === 'oidc' ? 'SSO' : 'LDAP'}-Anmeldung umstellen …</button>)}
           </div>
-        </> : <div className="small muted">Das Kennwort dieses Kontos wird im {user.source === 'ldap' ? 'Verzeichnis (LDAP)' : 'Identitätsanbieter (SSO)'} verwaltet.</div>}
+        </> : <div className="row wrap">
+          <span className="small muted">Das Kennwort dieses Kontos wird im {user.source === 'ldap' ? 'Verzeichnis (LDAP)' : 'Identitätsanbieter (SSO)'} verwaltet.
+            {!user.lastLoginAt && ' Noch nicht angemeldet – die erste Anmeldung mit diesem Benutzernamen übernimmt das Konto.'}</span>
+          {!self && <button onClick={() => switchSource('local')}>Auf lokales Kennwort umstellen …</button>}
+        </div>}
         <UserSessions userId={user.id} />
       </section>}
       {resetting && user && <ResetPasswordDialog user={user} onClose={() => setResetting(false)} onDone={() => { setResetting(false); onSaved(); }} />}

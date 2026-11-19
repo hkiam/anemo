@@ -3,6 +3,12 @@
 Bereich **Testfälle**: links der Ordnerbaum, in der Mitte die Liste mit Suche und Filtern, rechts der gewählte
 Testfall.
 
+**Spaltenbreiten** lassen sich an den Trennlinien ziehen (auch per Tastatur: Trennlinie mit Tab anwählen, ←/→,
+Umschalt für größere Schritte; Doppelklick oder Enter = Standardbreite). **«** blendet die Ordnerspalte aus, die
+schmale Leiste am linken Rand blendet sie wieder ein. Breiten und aufgeklappte Ordner werden persönlich gespeichert
+und gelten an jedem Rechner. Das gilt ebenso für die linke Navigation in Planung, Test-Health und Handbuch sowie für
+die Ausführungsliste neben der Durchführung.
+
 ## Finden und filtern
 - Suchfeld: Volltext (deutsch, mit Wortstämmen), Testfallschlüssel oder Jira-Altschlüssel.
 - Filter: **Status**, **Testart** (Unit, Integration, System, UAT … aus Zephyr), **Label**, **Priorität**, Ordner (mit
@@ -70,6 +76,11 @@ denen eine Änderung nicht erlaubt ist (z. B. Statuswechsel außerhalb des Workf
 sie mit Grund.
 
 ## Ordner
+Ordner sind zu Beginn zugeklappt; **▸** klappt einen Ordner auf, **⊞ Alle auf** bzw. **⊟ Alle zu** alle auf einmal.
+Die Zahl am Ordner zählt die Testfälle einschließlich Unterordnern (wie die Liste beim Öffnen des Ordners). Ab 13
+Ordnern filtert **Ordner filtern** den Baum nach Namen. Tastatur: ↑/↓ wechseln, → klappt auf, ← klappt zu, * klappt
+alle Geschwister auf, Enter öffnet. Wird ein Ordner über einen Link geöffnet, klappt Anemo die übergeordneten auf.
+
 Im Ordnerbaum legt **+** einen Ordner unter dem gewählten an. **⋯** am gewählten Ordner:
 - **✎ Umbenennen …**
 - **↦ Verschieben …**: in einen anderen Ordner oder auf die oberste Ebene (nicht in sich selbst oder einen eigenen
@@ -213,6 +224,8 @@ Wiederkehrende Auswahlen wie „Smoke“ oder „Regression Kern“ (**▤ Tests
   Neue passende Testfälle kommen automatisch hinzu.
 - **Anzeigen**: Ein dynamisches Set wendet seinen Filter an, ein festes markiert seine Testfälle.
 - Im Zyklus: **+ Tests aufnehmen → aus Testset …**.
+- Per API: `POST /api/projects/<KEY>/test-sets` mit `{"name": …, "kind": "dynamic", "aql": "label = \"smoke\""}`;
+  ein unauswertbarer oder leerer Filter wird abgelehnt (nie „alle Testfälle“).
 
 ## KI-Unterstützung im Editor
 - **✨ Aus Anforderung** entwirft einen Testfall aus einem Anforderungstext. Die gespeicherte Version wird als

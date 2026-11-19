@@ -1,5 +1,31 @@
 # Änderungen
 
+## 0.9.3 – 19.11.2026
+Verbesserungen aus dem Testbetrieb, keine Migration.
+
+**Neu**
+- Testfälle: Der Ordnerbaum ist auf- und zuklappbar (anfangs zugeklappt, „Alle auf/zu“, Tastatur wie im WAI-ARIA-Baum,
+  Filter bei vielen Ordnern, Testfallzahl einschließlich Unterordnern). Die Breiten von Ordnerspalte, Testfallliste
+  und Testfall lassen sich per Ziehgriff oder Tastatur einstellen und werden je Benutzer gespeichert; die Ordnerspalte
+  lässt sich ausblenden. Auch die Navigation in Planung, Test-Health, Handbuch und die Ausführungsliste sind verstellbar.
+- Zyklen per AQL oder Testset befüllen (`POST /api/cycles/:id/executions` mit `aql` bzw. `testSetId`, bis 5000
+  Testfälle, Fehler statt stillem Abschneiden), auch über die MCP-Werkzeuge `create_cycle` und `add_tests_to_cycle`.
+- Konten: SSO- bzw. LDAP-Konten lassen sich vorab anlegen (Rechte gelten ab der ersten Anmeldung) und vorhandene
+  Konten zwischen lokaler Anmeldung und SSO/LDAP umstellen – Rechte, Gruppen, Historie und API-Tokens bleiben.
+  Das eigene Konto und der letzte lokale Systemadministrator (Notzugang) sind ausgenommen.
+
+**Korrekturen**
+- Dynamische Testsets werten reine AQL, JSON-Objekte und die Kurzform `aql` aus und lehnen unauswertbare Filter ab,
+  statt alle Testfälle zu liefern.
+- MCP `api_call`: Bei DELETE wird der Body weitergereicht (Projekt löschen braucht `confirmKey`).
+- Oberfläche nach einem Update: `index.html` wird nicht mehr zwischengespeichert (`Cache-Control: no-cache`), Bausteine
+  unter `/assets/` gelten als unveränderlich, fehlende Bausteine liefern 404 statt der HTML-Seite – vorher konnte nach
+  einem Update (z. B. beim Rücksprung von der SSO-Anmeldung) eine weiße Seite erscheinen.
+- KI: Antworten, die an der Längengrenze abgeschnitten wurden (bei Reasoning-Modellen zählt die Denkphase mit), werden
+  erkannt und einmal mit mehr Spielraum wiederholt. Kaputte oder leere Antworten, Zeitüberschreitung und Modellfehler
+  ergeben eine verständliche Meldung (502) statt „Interner Fehler“.
+- Mit Kennwort melden sich nur noch lokale Konten an.
+
 ## 0.9.2 – 10.11.2026
 Korrekturen aus dem Testbetrieb, keine Migration.
 

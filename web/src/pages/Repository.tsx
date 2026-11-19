@@ -1,4 +1,5 @@
-import { type KeyboardEvent as ReactKeyboardEvent, useMemo, useState } from 'react';
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ColumnHandle, usePreference } from '../components/Columns.tsx';
 import { useCan } from '../session.tsx';
 import { api, useApi } from '../api.ts';
 import { ErrorNote, Modal, TestCaseStatusBadge, useWorkflow } from '../components/common.tsx';
@@ -20,21 +21,37 @@ import { StepLibraryDialog } from '../components/StepLibrary.tsx';
 import { FieldInputs, PriorityBadge, useFieldDefs, usePriorities } from '../components/Fields.tsx';
 import { createTestSet, TestSetsDialog } from '../components/TestSets.tsx';
 
-function FolderTree({ folders, parentId, active, onSelect, level = 1 }: { folders: Folder[]; parentId: string | null; active: string | null; onSelect: (id: string) => void; level?: number }) {
-  const children = folders.filter((f) => f.parentId === parentId);
+interface TreeState {
+  /** aufgeklappte Ordner */
+  open: Set<string>;
+  toggle: (id: string, open?: boolean) => void;
+  /** beim Filtern: sichtbare Ordner (Treffer und ihre übergeordneten), alles aufgeklappt */
+  visible: Set<string> | null;
+  /** Testfälle je Ordner einschließlich Unterordnern (wie die Liste beim Öffnen des Ordners) */
+  total: Map<string, number>;
+}
+
+function FolderTree({ folders, parentId, active, onSelect, tree, level = 1 }: { folders: Folder[]; parentId: string | null; active: string | null; onSelect: (id: string) => void; tree: TreeState; level?: number }) {
+  const children = folders.filter((f) => f.parentId === parentId && (!tree.visible || tree.visible.has(f.id)));
   if (!children.length) return null;
   return (
     <ul className="tree" role="group">
       {children.map((f) => {
-        const hasChildren = folders.some((x) => x.parentId === f.id);
+        const hasChildren = folders.some((x) => x.parentId === f.id && (!tree.visible || tree.visible.has(x.id)));
+        const open = hasChildren && (!!tree.visible || tree.open.has(f.id));
+        const total = tree.total.get(f.id) ?? f.testCount;
         return (
           <li key={f.id} role="none">
             <div className={`tree-item ${active === f.id ? 'active' : ''}`} role="treeitem" aria-selected={active === f.id} aria-level={level}
-              aria-expanded={hasChildren ? true : undefined} data-id={f.id} data-parent={f.parentId ?? ''} tabIndex={active === f.id ? 0 : -1}
-              onClick={() => onSelect(f.id)} aria-label={`${f.name}${f.testCount ? `, ${plural(f.testCount, 'Testfall', 'Testfälle')}` : ''}`}>
-              <span aria-hidden="true">📁</span>{f.name}<span className="count" aria-hidden="true">{f.testCount || ''}</span>
+              aria-expanded={hasChildren ? open : undefined} data-id={f.id} data-parent={f.parentId ?? ''} tabIndex={active === f.id ? 0 : -1}
+              onClick={() => onSelect(f.id)} title={total !== f.testCount ? `${plural(total, 'Testfall', 'Testfälle')}, davon ${f.testCount} direkt in diesem Ordner` : undefined}
+              aria-label={`${f.name}${total ? `, ${plural(total, 'Testfall', 'Testfälle')}` : ''}`}>
+              {hasChildren
+                ? <span className="tree-twisty" aria-hidden="true" onClick={(e) => { e.stopPropagation(); tree.toggle(f.id); }}>{open ? '▾' : '▸'}</span>
+                : <span className="tree-twisty" aria-hidden="true" />}
+              <span aria-hidden="true">{open ? '📂' : '📁'}</span><span className="tree-name">{f.name}</span><span className="count" aria-hidden="true">{total || ''}</span>
             </div>
-            <FolderTree folders={folders} parentId={f.id} active={active} onSelect={onSelect} level={level + 1} />
+            {open && <FolderTree folders={folders} parentId={f.id} active={active} onSelect={onSelect} tree={tree} level={level + 1} />}
           </li>
         );
       })}
@@ -43,10 +60,11 @@ function FolderTree({ folders, parentId, active, onSelect, level = 1 }: { folder
 }
 
 /**
- * Tastaturbedienung des Ordnerbaums (WAI-ARIA Tree): ↑/↓ wechseln, Pos1/Ende springen, → zum ersten Unterordner,
- * ← zum übergeordneten Ordner, Enter/Leertaste öffnet den Ordner. Fokus wandert mit (roving tabindex).
+ * Tastaturbedienung des Ordnerbaums (WAI-ARIA Tree): ↑/↓ wechseln, Pos1/Ende springen, → klappt auf bzw. geht zum
+ * ersten Unterordner, ← klappt zu bzw. geht zum übergeordneten Ordner, * klappt alle Geschwister auf, Enter/Leertaste
+ * öffnet den Ordner. Fokus wandert mit (roving tabindex).
  */
-function onTreeKey(e: ReactKeyboardEvent<HTMLElement>, onSelect: (id: string | null) => void) {
+function onTreeKey(e: ReactKeyboardEvent<HTMLElement>, onSelect: (id: string | null) => void, toggle: (id: string, open?: boolean) => void, expandSiblings: (parent: string) => void) {
   const items = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="treeitem"]')];
   const cur = items.indexOf(document.activeElement as HTMLElement);
   if (cur < 0) return;
@@ -58,12 +76,16 @@ function onTreeKey(e: ReactKeyboardEvent<HTMLElement>, onSelect: (id: string | n
     el.focus();
   };
   const me = items[cur]!;
+  const expanded = me.getAttribute('aria-expanded');
   if (e.key === 'ArrowDown') focus(items[cur + 1]);
   else if (e.key === 'ArrowUp') focus(items[cur - 1]);
   else if (e.key === 'Home') focus(items[0]);
   else if (e.key === 'End') focus(items.at(-1));
-  else if (e.key === 'ArrowRight') focus(items.find((i) => i.dataset.parent === me.dataset.id));
-  else if (e.key === 'ArrowLeft') focus(me.dataset.parent ? items.find((i) => i.dataset.id === me.dataset.parent) : items[0]);
+  else if (e.key === 'ArrowRight') {
+    if (expanded === 'false') { e.preventDefault(); toggle(me.dataset.id!, true); } else focus(items.find((i) => i.dataset.parent === me.dataset.id && i.dataset.id));
+  } else if (e.key === 'ArrowLeft') {
+    if (expanded === 'true') { e.preventDefault(); toggle(me.dataset.id!, false); } else focus(me.dataset.parent ? items.find((i) => i.dataset.id === me.dataset.parent) : items[0]);
+  } else if (e.key === '*') { e.preventDefault(); expandSiblings(me.dataset.parent ?? ''); }
   else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(me.dataset.id || null); }
 }
 
@@ -114,6 +136,50 @@ export function Repository({ projectKey, route }: { projectKey: string; route: R
   const hasFilter = !!(q || folderId || status || testType || label || prio || aql);
 
   const folders = useApi<Folder[]>(`/api/projects/${projectKey}/folders`);
+  // Spaltenbreiten (Ordner, Liste; der Testfall erhält den Rest) und Ordnerbaum: persönlich gespeichert
+  const [cols, setCols] = usePreference<{ folders?: number; list?: number; hideFolders?: boolean }>('layout.repo', {});
+  const [openIds, setOpenIds] = usePreference<string[]>(`repo.folders.${projectKey.toLowerCase().replace(/[^a-z0-9.-]/g, '-')}`, []);
+  const [folderFilter, setFolderFilter] = useState('');
+  const splitRef = useRef<HTMLDivElement>(null);
+  const folderPaneRef = useRef<HTMLDivElement>(null);
+  const listPaneRef = useRef<HTMLDivElement>(null);
+  const tree = useMemo<TreeState>(() => {
+    const all = folders.data ?? [];
+    const byId = new Map(all.map((f) => [f.id, f]));
+    const total = new Map<string, number>();
+    for (const f of all) {
+      for (let cur: Folder | undefined = f, guard = 0; cur && guard < 50; cur = cur.parentId ? byId.get(cur.parentId) : undefined, guard++) {
+        total.set(cur.id, (total.get(cur.id) ?? 0) + f.testCount);
+      }
+    }
+    let visible: Set<string> | null = null;
+    const needle = folderFilter.trim().toLowerCase();
+    if (needle) {
+      visible = new Set();
+      for (const f of all) if (f.name.toLowerCase().includes(needle)) {
+        for (let cur: Folder | undefined = f, guard = 0; cur && guard < 50; cur = cur.parentId ? byId.get(cur.parentId) : undefined, guard++) visible.add(cur.id);
+      }
+    }
+    return {
+      open: new Set(openIds), visible, total,
+      toggle: (id, open) => setOpenIds((prev) => {
+        const isOpen = prev.includes(id);
+        const want = open ?? !isOpen;
+        return want === isOpen ? prev : want ? [...prev, id] : prev.filter((x) => x !== id);
+      }),
+    };
+  }, [folders.data, openIds, folderFilter, setOpenIds]);
+  const parentsWithChildren = useMemo(() => [...new Set((folders.data ?? []).map((f) => f.parentId).filter((x): x is string => !!x))], [folders.data]);
+  const allOpen = parentsWithChildren.length > 0 && parentsWithChildren.every((id) => tree.open.has(id));
+  // gewählten Ordner sichtbar halten: übergeordnete Ordner aufklappen (auch beim Öffnen über einen Link)
+  useEffect(() => {
+    const all = folders.data;
+    if (!folderId || !all) return;
+    const byId = new Map(all.map((f) => [f.id, f]));
+    const up: string[] = [];
+    for (let cur = byId.get(folderId)?.parentId, guard = 0; cur && guard < 50; cur = byId.get(cur)?.parentId ?? null, guard++) up.push(cur);
+    if (up.some((id) => !openIds.includes(id))) setOpenIds((prev) => [...new Set([...prev, ...up])]);
+  }, [folderId, folders.data]); // eslint-disable-line react-hooks/exhaustive-deps
   const params = new URLSearchParams({ limit: String(PAGE), offset: String(page * PAGE) });
   if (q) params.set('q', q);
   if (folderId) {
@@ -263,19 +329,33 @@ export function Repository({ projectKey, route }: { projectKey: string; route: R
   };
 
   return (
-    <div className={`split ${selected ? '' : 'no-detail'}`}>
-      <div className={`pane folder-pane ${foldersOpen ? '' : 'collapsed'}`}>
+    <div ref={splitRef} className={`split resizable ${selected ? '' : 'no-detail'}`} style={{
+      ['--col-1' as string]: cols.hideFolders ? '38px' : cols.folders ? `${cols.folders}px` : undefined,
+      ['--col-2' as string]: cols.list ? `minmax(260px, ${cols.list}px)` : undefined,
+    }}>
+      {/* Ziehgriffe: Ordner | Liste | Testfall (nur auf breiten Bildschirmen, siehe Stylesheet) */}
+      {!cols.hideFolders && <ColumnHandle container={splitRef} pane={folderPaneRef} label="Breite der Ordnerspalte" min={160}
+        max={() => Math.min(640, (splitRef.current?.clientWidth ?? 1200) - 260 - (selected ? 380 : 0))}
+        onResize={(px) => setCols((c) => ({ ...c, folders: px }))} onReset={() => setCols((c) => ({ ...c, folders: undefined }))} />}
+      {selected && <ColumnHandle container={splitRef} pane={listPaneRef} label="Breite der Testfallliste" min={260} layout={`${cols.folders}-${cols.hideFolders}`}
+        max={() => (splitRef.current?.clientWidth ?? 1200) - (folderPaneRef.current?.offsetWidth ?? 240) - 380}
+        onResize={(px) => setCols((c) => ({ ...c, list: px }))} onReset={() => setCols((c) => ({ ...c, list: undefined }))} />}
+
+      <div ref={folderPaneRef} className={`pane folder-pane ${foldersOpen ? '' : 'collapsed'} ${cols.hideFolders ? 'rail' : ''}`}>
+        {cols.hideFolders && <button className="folder-rail ghost" onClick={() => setCols((c) => ({ ...c, hideFolders: false }))} title="Ordner einblenden" aria-label="Ordner einblenden">
+          <span aria-hidden="true">›</span><span className="folder-rail-label">Ordner{activeFolder ? `: ${activeFolder.name}` : ''}</span></button>}
         <div className="pane-head"><h3>Ordner</h3>
           <button className="small folder-toggle" onClick={() => setFoldersOpen((o) => !o)} aria-expanded={foldersOpen}>{activeFolder ? activeFolder.name : 'Alle'} {foldersOpen ? '▴' : '▾'}</button>
           <span className="spacer" />
           <ReportMenu items={[{ label: folderId ? 'Testfallspezifikation (Ordner)' : 'Testfallspezifikation (Projekt)',
             path: `/api/reports/specification/${projectKey}${folderId ? `?folderId=${folderId}` : ''}`,
-            hint: 'Aktuelle Fassung aller Testfälle mit Schritten' }]} />{canEdit && <button className="small ghost" onClick={() => { setNewFolder(''); setFoldersOpen(true); }} title="Ordner anlegen (unter dem gewählten)" aria-label="Ordner anlegen">+</button>}
-          {canEdit && activeFolder && <ActionMenu label="⋯ Ordner" ariaLabel={`Ordner „${activeFolder.name}“: weitere Aktionen`} items={[
+            hint: 'Aktuelle Fassung aller Testfälle mit Schritten' }]} compact />{canEdit && <button className="small ghost" onClick={() => { setNewFolder(''); setFoldersOpen(true); }} title="Ordner anlegen (unter dem gewählten)" aria-label="Ordner anlegen">+</button>}
+          {canEdit && activeFolder && <ActionMenu label="⋯" ariaLabel={`Ordner „${activeFolder.name}“: weitere Aktionen`} items={[
             { label: '✎ Umbenennen …', onClick: () => void renameFolder() },
             { label: '↦ Verschieben …', title: 'In einen anderen Ordner oder auf die oberste Ebene', onClick: () => setMoving(true) },
             { label: '🗑 Löschen …', title: 'Inhalt wandert eine Ebene nach oben', onClick: () => void deleteFolder() },
-          ]} />}</div>
+          ]} />}
+          <button className="small ghost folder-hide" onClick={() => setCols((c) => ({ ...c, hideFolders: true }))} title="Ordnerspalte ausblenden (mehr Platz für Liste und Testfall)" aria-label="Ordnerspalte ausblenden">«</button></div>
         {moving && activeFolder && <FolderMoveDialog folders={folders.data ?? []} folder={activeFolder} path={folderPath} onClose={() => setMoving(false)}
           onMove={async (parentId) => {
             try { await api('POST', `/api/folders/${activeFolder.id}/move`, { parentId }); setMoving(false); folders.reload(); toast('Ordner verschoben'); } catch (e) { setError(e); }
@@ -289,16 +369,25 @@ export function Repository({ projectKey, route }: { projectKey: string; route: R
             <button className="small ghost" onClick={() => setNewFolder(null)}>Abbrechen</button>
           </div>
         )}
-        <div role="tree" aria-label="Ordner" onKeyDown={(e) => onTreeKey(e, (id) => { go({ folder: id }); setFoldersOpen(false); })}>
+        {(folders.data?.length ?? 0) > 0 && <div className="tree-tools row small">
+          {(folders.data?.length ?? 0) > 12 && <input type="search" className="small" placeholder="Ordner filtern" value={folderFilter} onChange={(e) => setFolderFilter(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setFolderFilter(''); }} aria-label="Ordner nach Namen filtern" />}
+          <span className="spacer" />
+          {parentsWithChildren.length > 0 && !folderFilter && <button className="small ghost" onClick={() => setOpenIds(allOpen ? [] : parentsWithChildren)}
+            title={allOpen ? 'Alle Ordner zuklappen' : 'Alle Ordner aufklappen'}>{allOpen ? '⊟ Alle zu' : '⊞ Alle auf'}</button>}
+        </div>}
+        {folderFilter && tree.visible?.size === 0 && <div className="small muted">Kein Ordner mit „{folderFilter}“.</div>}
+        <div role="tree" aria-label="Ordner" onKeyDown={(e) => onTreeKey(e, (id) => { go({ folder: id }); setFoldersOpen(false); }, tree.toggle,
+          (parent) => setOpenIds((prev) => [...new Set([...prev, ...(folders.data ?? []).filter((f) => (f.parentId ?? '') === parent && parentsWithChildren.includes(f.id)).map((f) => f.id)])]))}>
           <div className={`tree-item ${!folderId ? 'active' : ''}`} role="treeitem" aria-selected={!folderId} aria-level={1} data-id="" data-parent="" tabIndex={!folderId ? 0 : -1}
             onClick={() => { go({ folder: null }); setFoldersOpen(false); }}>Alle Testfälle</div>
-          <FolderTree folders={folders.data ?? []} parentId={null} active={folderId} onSelect={(id) => { go({ folder: id }); setFoldersOpen(false); }} />
+          <FolderTree folders={folders.data ?? []} parentId={null} active={folderId} tree={tree} onSelect={(id) => { go({ folder: id }); setFoldersOpen(false); }} />
         </div>
         {!folders.data && !folders.error && <div className="small muted">Lädt …</div>}
         </div>
       </div>
 
-      <div className="pane">
+      <div ref={listPaneRef} className="pane">
         {/* Kopf: Primäraktionen immer sichtbar rechts; Nebenaktionen im Menü; Suche in eigener Zeile */}
         <div className="pane-head repo-head">
           <SavedViews projectKey={projectKey} page="repo" base={`#/p/${projectKey}/repo`} />

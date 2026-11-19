@@ -43,6 +43,7 @@ export const EventTypes = {
   CommentAdded: 'CommentAdded',
   // Konten und Kennwörter (ohne Kennwörter/Tokens in der Nutzlast)
   UserPasswordReset: 'UserPasswordReset',
+  UserSourceChanged: 'UserSourceChanged',
   UserPasswordChanged: 'UserPasswordChanged',
   PasswordResetRequested: 'PasswordResetRequested',
   UserLocked: 'UserLocked',

@@ -4,7 +4,7 @@ import { dirname } from 'node:path';
 import type { Db } from '../../platform/db.ts';
 import { badRequest, conflict, HttpError, notFound } from '../../platform/http.ts';
 import type { Permission, Role } from './access.ts';
-import { ldapAuthenticate, ldapConfig, provision } from './directory.ts';
+import { ldapAuthenticate, ldapConfig, oidcConfig, provision } from './directory.ts';
 import { hashPassword, passwordProblem, randomPassword, verifyPassword } from './password.ts';
 import { adminResetPassword, changeOwn, registerFailure } from './accounts.ts';
 import { settingsEnv } from '../../platform/settings.ts';
@@ -62,6 +62,61 @@ export async function updateUser(db: Db, id: string, u: { displayName?: string; 
     where id = ${id} returning ${USER_COLUMNS(db)}`;
   if (u.active === false) await db`delete from user_session where user_id = ${id}`;
   return row!;
+}
+
+export type UserSource = 'local' | 'oidc' | 'ldap';
+const SOURCE_NAME: Record<UserSource, string> = { local: 'lokales Kennwort', oidc: 'Anmeldung über den Identitätsanbieter (SSO)', ldap: 'Anmeldung über das Verzeichnis (LDAP)' };
+
+function ensureProvider(source: UserSource) {
+  if (source === 'oidc' && !oidcConfig()) throw badRequest('SSO ist nicht eingerichtet (OIDC_ISSUER, OIDC_CLIENT_ID).');
+  if (source === 'ldap' && !ldapConfig()) throw badRequest('LDAP ist nicht eingerichtet (LDAP_URL).');
+}
+
+/**
+ * Konto für SSO/LDAP vorbereiten (ohne Kennwort). Die erste Anmeldung mit demselben Benutzernamen übernimmt es
+ * samt Rechten – so kann die Administration Rechte vergeben, bevor sich jemand zum ersten Mal anmeldet.
+ */
+export async function createExternalUser(db: Db, u: { username: string; displayName: string; email?: string | null; source: 'oidc' | 'ldap'; isSystemAdmin?: boolean; isAgent?: boolean }): Promise<User> {
+  ensureProvider(u.source);
+  if (!/^[\p{L}\p{N}._@-]{2,64}$/u.test(u.username)) throw badRequest('Benutzername: 2–64 Zeichen, Buchstaben, Ziffern, . _ - @');
+  const [exists] = await db`select 1 from app_user where lower(username) = lower(${u.username})`;
+  if (exists) throw conflict(`Benutzer „${u.username}“ existiert bereits`);
+  const [row] = await db<User[]>`
+    insert into app_user(username, display_name, email, source, external_id, is_system_admin, is_agent)
+    values (${u.username}, ${u.displayName}, ${u.email ?? null}, ${u.source}, null, ${u.isSystemAdmin ?? false}, ${u.isAgent ?? false})
+    returning ${USER_COLUMNS(db)}`;
+  await db`insert into user_notification(user_id, kind) values (${row!.id}, 'assigned'), (${row!.id}, 'retest'), (${row!.id}, 'mentioned'), (${row!.id}, 'watched') on conflict do nothing`;
+  return row!;
+}
+
+/**
+ * Anmeldeart eines Kontos umstellen; Rechte, Gruppen, Historie und API-Tokens bleiben. Nach SSO/LDAP: Kennwort und
+ * Zuordnung entfallen, die nächste Anmeldung mit demselben Benutzernamen übernimmt das Konto. Nach lokal: Einmal-Kennwort
+ * (nur in der Antwort), Wechsel beim ersten Anmelden. Sitzungen enden. Ein aktiver lokaler Systemadministrator muss als
+ * Notzugang bleiben (falls der Identitätsanbieter ausfällt).
+ */
+export async function changeUserSource(db: Db, id: string, source: UserSource, actorId: string | null, actor: string): Promise<{ user: User; password: string | null }> {
+  const cur = await getUser(db, id);
+  if (cur.source === source) throw badRequest(`„${cur.username}“ nutzt bereits: ${SOURCE_NAME[source]}.`);
+  if (actorId === id) throw badRequest('Das eigene Konto kann nicht umgestellt werden (die laufende Anmeldung ginge verloren).');
+  ensureProvider(source);
+  if (cur.source === 'local' && cur.isSystemAdmin && cur.active) {
+    const [r] = await db<{ n: number }[]>`select count(*)::int as n from app_user where source = 'local' and is_system_admin and active and id <> ${id}`;
+    if (!r!.n) throw badRequest('Es muss mindestens ein aktiver lokaler Systemadministrator als Notzugang bleiben.');
+  }
+  const password = source === 'local' ? randomPassword() : null;
+  const [row] = await db<User[]>`
+    update app_user set source = ${source}, external_id = null,
+      password_hash = ${password ? await hashPassword(password) : null}, password_changed_at = ${password ? db`now()` : null},
+      must_change_password = ${!!password}, failed_logins = 0, locked_until = null
+    where id = ${id} returning ${USER_COLUMNS(db)}`;
+  await db`delete from user_session where user_id = ${id}`;
+  await db`delete from password_reset where user_id = ${id}`;
+  // Gruppen der bisherigen Quelle gehören zur alten Anmeldung; die neue gleicht ihre eigenen beim Anmelden ab
+  if (cur.source !== 'local') await db`delete from group_member gm using user_group g where gm.group_id = g.id and gm.user_id = ${id} and g.source = ${cur.source}`;
+  await recordEvent(db, { type: EventTypes.UserSourceChanged, aggregateType: 'User', aggregateId: id, actor,
+    payload: { username: cur.username, from: cur.source, to: source } });
+  return { user: row!, password };
 }
 
 async function ensureAnotherAdmin(db: Db, exceptId: string) {
@@ -227,7 +282,7 @@ export async function login(db: Db, username: string, password: string, userAgen
   }
   // Auch bei unbekanntem Benutzer hashen, damit die Antwortzeit nichts verrät
   const ok = await verifyPassword(password, u?.passwordHash ?? 'scrypt$16384$8$1$AAAAAAAAAAAAAAAAAAAAAA==$AAAA');
-  if (!u || !ok || !u.active) {
+  if (!u || !ok || !u.active || u.source !== 'local') {
     if (u && u.source === 'local' && !ok) await registerFailure(db, u.id);
     throw fail();
   }

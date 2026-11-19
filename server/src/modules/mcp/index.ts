@@ -25,6 +25,13 @@ type ApiCall = ((method: string, path: string, body?: unknown) => Promise<unknow
 
 const str = (description: string) => ({ type: 'string', description });
 const obj = (properties: Json, required: string[] = []) => ({ type: 'object', properties, required, additionalProperties: false });
+/** Auswahl für „Testfälle in Zyklus aufnehmen“: Schlüsselliste, Abfrage oder Testset (höchstens eines); null = keine. */
+function cycleSelection(a: Json, keysArg: string): Json | null {
+  const keys = (a[keysArg] as string[] | undefined) ?? [];
+  const sel = [keys.length ? { testCaseIds: keys } : null, a.aql ? { aql: a.aql } : null, a.testSetId ? { testSetId: a.testSetId } : null].filter(Boolean) as Json[];
+  if (sel.length > 1) throw new ToolError(`Höchstens eines angeben: ${keysArg}, aql oder testSetId`);
+  return sel[0] ?? null;
+}
 const q = (params: Record<string, unknown>) => {
   const u = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') u.set(k, String(v));
@@ -99,15 +106,18 @@ const TOOLS: Tool[] = [
     run: (a, api) => api('GET', `/api/projects/${enc(String(a.project))}/health`),
   },
   {
-    name: 'create_cycle', readOnly: false, description: 'Testzyklus anlegen und optional Testfälle (aktuelle Version) aufnehmen.',
+    name: 'create_cycle', readOnly: false,
+    description: 'Testzyklus anlegen und optional Testfälle (aktuelle Version) aufnehmen – höchstens eine Auswahl: testCaseKeys (bis 1000), aql oder testSetId (bis 5000).',
     inputSchema: obj({ project: str('Projektschlüssel'), name: str('Name des Zyklus'), build: str('optional'), release: str('optional'),
-      environment: str('optional'), planId: str('optional: Testplan-ID'), testCaseKeys: { type: 'array', items: { type: 'string' }, description: 'optional: Testfallschlüssel' } }, ['project', 'name']),
+      environment: str('optional'), planId: str('optional: Testplan-ID'), testCaseKeys: { type: 'array', items: { type: 'string' }, description: 'optional: Testfallschlüssel (bis 1000)' },
+      aql: str('optional: Abfrage (AQL) über die Testfälle des Projekts, z. B. label = "automatisiert" – alle Treffer werden aufgenommen'),
+      testSetId: str('optional: ID eines Testsets des Projekts (statisch oder dynamisch)') }, ['project', 'name']),
     run: async (a, api) => {
+      const sel = cycleSelection(a, 'testCaseKeys');
       const c = (await api('POST', `/api/projects/${enc(String(a.project))}/cycles`, {
         name: a.name, build: a.build ?? null, release: a.release ?? null, environment: a.environment ?? null, planId: a.planId ?? null,
       })) as Json;
-      const keys = (a.testCaseKeys as string[] | undefined) ?? [];
-      const added = keys.length ? await api('POST', `/api/cycles/${c.id}/executions`, { testCaseIds: keys }) : { added: 0 };
+      const added = sel ? await api('POST', `/api/cycles/${c.id}/executions`, sel) : { added: 0 };
       return { cycle: { id: c.id, name: c.name }, ...(added as Json) };
     },
   },
@@ -228,9 +238,16 @@ const TOOLS: Tool[] = [
     run: (a, api) => api('POST', `/api/projects/${enc(String(a.project))}/plans`, { name: a.name, release: a.release ?? null, description: a.description ?? null }),
   },
   {
-    name: 'add_tests_to_cycle', readOnly: false, description: 'Testfälle (aktuelle Version) in einen bestehenden Zyklus aufnehmen.',
-    inputSchema: obj({ cycleId: str('Zyklus-ID'), testCases: { type: 'array', items: { type: 'string' }, description: 'Testfallschlüssel' } }, ['cycleId', 'testCases']),
-    run: (a, api) => api('POST', `/api/cycles/${enc(String(a.cycleId))}/executions`, { testCaseIds: a.testCases }),
+    name: 'add_tests_to_cycle', readOnly: false,
+    description: 'Testfälle (aktuelle Version) in einen bestehenden Zyklus aufnehmen – genau eines: testCases (Schlüssel, bis 1000), aql oder testSetId (bis 5000). Bereits enthaltene werden übersprungen.',
+    inputSchema: obj({ cycleId: str('Zyklus-ID'), testCases: { type: 'array', items: { type: 'string' }, description: 'Testfallschlüssel (bis 1000)' },
+      aql: str('Abfrage (AQL) über die Testfälle des Projekts, z. B. label = "automatisiert" – alle Treffer werden aufgenommen'),
+      testSetId: str('ID eines Testsets des Projekts (statisch oder dynamisch)') }, ['cycleId']),
+    run: (a, api) => {
+      const sel = cycleSelection(a, 'testCases');
+      if (!sel) throw new ToolError('Genau eines angeben: testCases, aql oder testSetId');
+      return api('POST', `/api/cycles/${enc(String(a.cycleId))}/executions`, sel);
+    },
   },
   {
     name: 'assign_executions', readOnly: false, description: 'Ausführungen einer Person zuweisen (oder Zuweisung entfernen mit assignee null).',
@@ -341,7 +358,7 @@ const TOOLS: Tool[] = [
       if (!op) throw new ToolError(`Keine Funktion ${method} ${path} – mit api_operations nachsehen`);
       if (BLOCKED.some((b) => b.test(op.path))) throw new ToolError(`${op.method} ${op.path} ist über MCP nicht verfügbar (Anmeldung, Kennwörter, API-Tokens bzw. MCP selbst)`);
       if (needsConfirm(op) && a.confirm !== true) throw new ToolError(`${op.method} ${op.path} („${op.summary}“) löscht Daten oder ändert Rechte, Einstellungen bzw. Freigaben – zum Ausführen confirm: true angeben`);
-      const r = await api.raw(method, `${path}${q((a.query ?? {}) as Json)}`, method === 'GET' || method === 'DELETE' ? undefined : (a.body ?? {}));
+      const r = await api.raw(method, `${path}${q((a.query ?? {}) as Json)}`, bodyFor(method, a.body));
       if (r.status >= 400) {
         let detail = r.text;
         try { const j = JSON.parse(r.text) as Json; detail = String(j.detail ?? r.text) + (j.issues ? ` ${JSON.stringify(j.issues).slice(0, 2000)}` : ''); } catch { /* Text */ }
@@ -490,6 +507,15 @@ export function normalizeArgs(schema: Json, args: Json): Json {
     if (alias) { out[name] = out[alias]; delete out[alias]; }
   }
   return out;
+}
+/**
+ * Körper für api_call: GET nie; DELETE nur, wenn angegeben (z. B. Projekt löschen mit {confirmKey}); sonst {} als
+ * Standard, damit Schemas ohne Pflichtfelder greifen.
+ */
+export function bodyFor(method: string, body: unknown): unknown {
+  if (method === 'GET') return undefined;
+  if (method === 'DELETE') return body === undefined || body === null ? undefined : body;
+  return body ?? {};
 }
 /** Alle Werkzeuge liefern ein JSON-Objekt (Listen als { items }) in structuredContent. */
 const OUTPUT_SCHEMA = { type: 'object', additionalProperties: true };

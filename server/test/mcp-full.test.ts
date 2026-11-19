@@ -81,6 +81,13 @@ describe('MCP: alles, was die Oberfläche kann – mit den Rechten des Token-Ben
     assert.equal(del.error, true);
     assert.match(del.text, /confirm: true/);
     assert.equal((await tool('admin', 'api_call', { method: 'DELETE', path: `/api/test-cases/${tc2.data.id}`, confirm: true })).error, false);
+    // DELETE mit Körper (Projekt löschen braucht confirmKey) – der Körper muss ankommen
+    await req('admin', 'POST', '/api/projects', { key: 'MFDEL', name: 'Wegwerfprojekt' });
+    const wrong = await tool('admin', 'api_call', { method: 'DELETE', path: '/api/projects/MFDEL', body: { confirmKey: 'FALSCH' }, confirm: true });
+    assert.match(wrong.text, /Projektschlüssel genau/);
+    const gone = await tool('admin', 'api_call', { method: 'DELETE', path: '/api/projects/MFDEL', body: { confirmKey: 'MFDEL' }, confirm: true });
+    assert.equal(gone.error, false, gone.text);
+    assert.equal((await req('admin', 'GET', '/api/projects/MFDEL')).status, 404);
     // Berichte als Text
     const plans = (await req('admin', 'GET', '/api/projects/MF/plans')).body;
     const rep = await tool('admin', 'api_call', { method: 'GET', path: `/api/reports/completion/${plans[0].id}`, query: { format: 'md' } });

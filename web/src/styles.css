@@ -101,7 +101,7 @@ pre { margin: 0; white-space: pre-wrap !important; word-break: break-word; }
 .page-narrow { max-width: 1100px; margin: 0 auto; }
 .page-wide { max-width: 1600px; margin: 0 auto; } /* Listen und Tabellen: breite Fenster nutzen, aber nicht endlos strecken */
 
-.split { display: grid; grid-template-columns: 240px minmax(320px, 1fr) minmax(420px, 1.25fr); height: 100%; min-height: 0; }
+.split { display: grid; grid-template-columns: var(--col-1, 240px) var(--col-2, minmax(320px, 1fr)) minmax(380px, 1.25fr); height: 100%; min-height: 0; position: relative; }
 .split > * { min-height: 0; overflow: auto; border-right: 1px solid var(--border); align-content: start; }
 .split > *:last-child { border-right: 0; }
 .pane { padding: 14px; }
@@ -287,8 +287,9 @@ details > summary { cursor: pointer; color: var(--muted); font-weight: 600; font
 .qs-all { display: block; padding: 8px; border-top: 1px solid var(--border); margin-top: 4px; }
 
 /* Planung & Ausführung */
-.planning { display: grid; grid-template-columns: 290px minmax(0, 1fr); height: 100%; min-height: 0; }
+.planning { display: grid; grid-template-columns: var(--col-1, 290px) minmax(0, 1fr); height: 100%; min-height: 0; position: relative; }
 .planning > * { min-height: 0; overflow: auto; align-content: start; }
+.planning > .col-handle { overflow: visible; }
 .planning > .pane > * { max-width: 1500px; } /* breite Bildschirme: Inhalt nicht endlos strecken */
 .planning > .nav-pane { border-right: 1px solid var(--border); padding: 12px; background: var(--surface); }
 .plan-item { display: grid; gap: 4px; padding: 8px; border-radius: 8px; cursor: pointer; color: var(--text); }
@@ -438,7 +439,7 @@ a.row-action:hover { background: var(--surface-2); opacity: 1; }
 @media (hover: none) { a.row-action { opacity: .7; } }
 /* Durchführung im Fokusfenster: Speichern immer sichtbar */
 .exec-actions { position: sticky; bottom: 0; z-index: 4; background: var(--surface); padding: 10px 0; border-top: 1px solid var(--border); box-shadow: 0 -6px 12px -10px rgba(0,0,0,.25); }
-.split.no-detail { grid-template-columns: 240px minmax(0, 1fr); }
+.split.no-detail { grid-template-columns: var(--col-1, 240px) minmax(0, 1fr); }
 @media (max-width: 1100px) { .split.no-detail { grid-template-columns: 200px minmax(0, 1fr); } }
 @media (max-width: 700px) { .split.no-detail { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .focus-bar { flex-wrap: wrap; } .focus-page { padding: 12px 12px 60px; } .focus-form { padding: 14px 14px 0; } .focus-form > .focus-actions { margin: 6px -14px 0; flex-wrap: wrap; } }

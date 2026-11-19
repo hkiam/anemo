@@ -1,3 +1,4 @@
+import { SideLayout } from '../components/Columns.tsx';
 import { useState } from 'react';
 import { api, fmtDay, useApi } from '../api.ts';
 import { ErrorNote, TestCaseStatusBadge, useWorkflow } from '../components/common.tsx';
@@ -37,7 +38,7 @@ export function Health({ projectKey, route }: { projectKey: string; route: Route
   }
 
   return (
-    <div className="planning">
+    <SideLayout name="health">
       <div className="pane" style={{ borderRight: '1px solid var(--border)', overflow: 'auto' }}>
         <h3>Test-Health</h3>
         <p className="small muted">{h.data ? `${h.data.total.toLocaleString('de-DE')} Testfälle geprüft` : 'Lädt …'}</p>
@@ -88,7 +89,7 @@ export function Health({ projectKey, route }: { projectKey: string; route: Route
           </table></div>
         </>}
       </div>}
-    </div>
+    </SideLayout>
   );
 }
 

@@ -1,3 +1,4 @@
+import { SideLayout } from '../components/Columns.tsx';
 import { useEffect } from 'react';
 import { useApi } from '../api.ts';
 import { handbookLink } from '../components/HelpPanel.tsx';
@@ -24,7 +25,7 @@ export function Help({ route }: { route: Route }) {
     if (el) { el.scrollIntoView({ block: 'start' }); el.setAttribute('tabindex', '-1'); el.focus({ preventScroll: true }); }
   }, [anchor, text.data]);
   return (
-    <div className="planning">
+    <SideLayout name="help">
       <div className="pane" style={{ borderRight: '1px solid var(--border)', overflow: 'auto' }}>
         <h3>Handbuch</h3>
         <div className="stack" style={{ gap: 2 }}>
@@ -41,6 +42,6 @@ export function Help({ route }: { route: Route }) {
           {typeof text.data === 'string' && <Markdown text={text.data} link={(h) => handbookLink(h)} />}
         </div>
       </div>
-    </div>
+    </SideLayout>
   );
 }

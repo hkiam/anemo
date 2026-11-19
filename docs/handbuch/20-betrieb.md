@@ -205,7 +205,7 @@ Lasttest: 20 gleichzeitige Benutzer mit Denkzeit → Median 14 ms, p95 0,34 s; �
 |---|---|
 | „Anfrage von fremdem Ursprung abgelehnt“ | Reverse-Proxy gibt den `Host` nicht weiter bzw. `ANEMO_PUBLIC_URL`/Domain passt nicht |
 | SSO: „Anmeldung abgelehnt / nicht für diese Anwendung“ | Client-ID, Redirect-URI (`…/api/auth/oidc/callback`) oder Issuer prüfen |
-| SSO: „Konto existiert bereits (local)“ | Gleichnamiges lokales Konto; umbenennen oder deaktivieren, dann erneut anmelden |
+| SSO: „Konto existiert bereits (local)“ | Gleichnamiges lokales Konto: Administration → Benutzer → Bearbeiten → *Auf SSO-Anmeldung umstellen …*, dann erneut anmelden |
 | LDAP: „Verzeichnisdienst nicht erreichbar“ | `LDAP_URL`, Firewall, Zertifikat (`LDAP_TLS_INSECURE` nur zum Test) |
 | Keine Mails | *Integrationen → E-Mail-Benachrichtigungen*: Testmail, letzter Fehler; Benutzer ohne E-Mail-Adresse erhalten nichts |
 | OpenProject/GitLab „gesperrt“ | Projekt hat externe Dienste gesperrt (Absicht) – nur bewusst freigeben |

@@ -224,6 +224,77 @@ describe('Unternehmensanmeldung (B5)', () => {
     for (const k of ['OIDC_GROUPS_CLAIM', 'OIDC_TOKEN_AUTH']) delete process.env[k];
     process.env.OIDC_ADMIN_GROUP = 'Release-Manager';
   });
+
+  describe('Konten vorbereiten und auf SSO umstellen', () => {
+    const ssoLogin = async (user: string, sub: string) => {
+      claims = { preferred_username: user, sub, name: `${user} SSO`, email: `${user}@example.test`, groups: [] };
+      const start = await req('/api/auth/oidc/start');
+      const cb = new URL((await fetch(start.headers.get('location')!, { redirect: 'manual' })).headers.get('location')!);
+      const done = await req(`/api/auth/oidc/callback${cb.search}`, { headers: { cookie: stateOf(start) } });
+      claims = {};
+      return { cookie: session(done), location: decodeURIComponent(done.headers.get('location') ?? '') };
+    };
+    const localLogin = (username: string, password: string) => req('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    let admin = '';
+    before(async () => {
+      // Adminrechte werden in Anemo vergeben, nicht über eine Gruppe des Anbieters
+      delete process.env.OIDC_ADMIN_GROUP;
+      admin = session(await localLogin('admin', PW))!;
+    });
+    after(() => { process.env.OIDC_ADMIN_GROUP = 'Release-Manager'; });
+
+    it('vorbereitetes SSO-Konto wird bei der ersten Anmeldung übernommen, samt Adminrecht', async () => {
+      const res = await req('/api/admin/users', { method: 'POST', headers: { cookie: admin },
+        body: JSON.stringify({ username: 'jens', displayName: 'Jens Vorab', source: 'oidc', isSystemAdmin: true }) });
+      assert.equal(res.status, 201, await res.clone().text());
+      const created = await res.json();
+      assert.deepEqual([created.source, created.password], ['oidc', null]);
+      assert.equal((await localLogin('jens', 'irgendein-Kennwort-1')).status, 401, 'kein Kennwort-Login für SSO-Konten');
+      const { cookie } = await ssoLogin('jens', 'oidc-jens');
+      const me = await (await req('/api/auth/me', { headers: { cookie: cookie! } })).json();
+      assert.deepEqual([me.username, me.isSystemAdmin], ['jens', true]);
+      const rows = await env.db<{ id: string; externalId: string }[]>`select id, external_id from app_user where lower(username) = 'jens'`;
+      assert.deepEqual(rows.map((r) => [r.id, r.externalId]), [[created.id, 'oidc-jens']], 'kein zweites Konto');
+      // weitere Anmeldungen bleiben beim selben Konto; eine andere Identität mit gleichem Namen nicht
+      assert.ok((await ssoLogin('jens', 'oidc-jens')).cookie);
+      assert.match((await ssoLogin('jens', 'oidc-fremd')).location, /bereits ein Konto/);
+    });
+
+    it('lokales Konto auf SSO umstellen: Rechte, Konto-ID und API-Tokens bleiben, Kennwort entfällt', async () => {
+      const created = await (await req('/api/admin/users', { method: 'POST', headers: { cookie: admin },
+        body: JSON.stringify({ username: 'ute', displayName: 'Ute Lokal', password: 'Lokales-Kennwort-1' }) })).json();
+      const uteSession = session(await localLogin('ute', 'Lokales-Kennwort-1'))!;
+      const token = (await (await req('/api/auth/tokens', { method: 'POST', headers: { cookie: uteSession }, body: JSON.stringify({ name: 'mcp', expiresDays: null }) })).json()).token as string;
+      assert.match((await ssoLogin('ute', 'oidc-ute')).location, /bereits ein Konto „ute“ \(local\)/);
+
+      const sw = await req(`/api/admin/users/${created.id}/source`, { method: 'PUT', headers: { cookie: admin }, body: JSON.stringify({ source: 'oidc' }) });
+      assert.equal(sw.status, 200, await sw.clone().text());
+      assert.deepEqual([(await sw.json()).source], ['oidc']);
+      assert.equal((await req('/api/auth/me', { headers: { cookie: uteSession } })).status, 401, 'Sitzungen enden');
+      assert.equal((await localLogin('ute', 'Lokales-Kennwort-1')).status, 401, 'altes Kennwort gilt nicht mehr');
+      assert.equal((await req('/api/auth/me', { headers: { authorization: `Bearer ${token}` } })).status, 200, 'API-Token gilt weiter');
+      assert.ok((await ssoLogin('ute', 'oidc-ute')).cookie);
+      const rows = await env.db<{ id: string; externalId: string }[]>`select id, external_id from app_user where lower(username) = 'ute'`;
+      assert.deepEqual(rows.map((r) => [r.id, r.externalId]), [[created.id, 'oidc-ute']]);
+
+      // zurück auf lokal: Einmal-Kennwort mit Pflichtwechsel
+      const back = await (await req(`/api/admin/users/${created.id}/source`, { method: 'PUT', headers: { cookie: admin }, body: JSON.stringify({ source: 'local' }) })).json();
+      assert.equal(back.source, 'local');
+      assert.equal((await localLogin('ute', back.password)).status, 200);
+      assert.match((await ssoLogin('ute', 'oidc-ute')).location, /bereits ein Konto/);
+    });
+
+    it('der letzte lokale Systemadministrator (Notzugang) und das eigene Konto lassen sich nicht umstellen', async () => {
+      const [a] = await env.db<{ id: string }[]>`select id from app_user where username = 'admin'`;
+      const own = await req(`/api/admin/users/${a!.id}/source`, { method: 'PUT', headers: { cookie: admin }, body: JSON.stringify({ source: 'oidc' }) });
+      assert.match((await own.json()).detail, /eigene Konto/);
+      const { cookie: jens } = await ssoLogin('jens', 'oidc-jens');
+      const res = await req(`/api/admin/users/${a!.id}/source`, { method: 'PUT', headers: { cookie: jens! }, body: JSON.stringify({ source: 'oidc' }) });
+      assert.equal(res.status, 400);
+      assert.match((await res.json()).detail, /lokaler Systemadministrator als Notzugang/);
+      assert.equal((await localLogin('admin', PW)).status, 200);
+    });
+  });
 });
 
 describe('Gruppen-Claims (Keycloak/Entra)', () => {

@@ -1,3 +1,4 @@
+import { ColumnHandle, SideLayout, usePreference } from '../components/Columns.tsx';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { api, fmtDate, fmtDay, get, uploadAttachment, useApi } from '../api.ts';
 import { uniqueFileName, WikiEditor } from '../wiki/WikiEditor.tsx';
@@ -56,12 +57,12 @@ export function Cycles({ projectKey, route }: { projectKey: string; route: Route
   useSync(['plan', 'cycle', 'execution'], () => plans.reload());
   return (
     // Offene Durchführung: Plan-Navigator ausblenden, damit Liste und Schritte Platz haben
-    <div className={`planning ${cycleId && route.query.get('exec') ? 'exec-open' : ''}`}>
+    <SideLayout name="planning" className={cycleId && route.query.get('exec') ? 'exec-open' : ''}>
       <PlanNavigator projectKey={projectKey} plans={plans.data ?? []} route={route} onChanged={plans.reload} />
       {cycleId
         ? <CycleView key={cycleId} projectKey={projectKey} cycleId={cycleId} route={route} />
         : <PlanningMain projectKey={projectKey} plans={plans.data ?? []} route={route} onChanged={plans.reload} />}
-    </div>
+    </SideLayout>
   );
 }
 
@@ -453,7 +454,11 @@ function CycleView({ projectKey, cycleId, route }: { projectKey: string; cycleId
   const [repeating, setRepeating] = useState(false);
   const [comparing, setComparing] = useState(false);
   const [distributing, setDistributing] = useState(false);
-  const toggleWide = () => setWide((w) => { try { localStorage.setItem('anemo.execWide', w ? '0' : '1'); } catch { /* egal */ } return !w; });
+  // eigene Breite der Liste (Ziehgriff); „⇤/⇥“ wechselt zurück auf die beiden festen Aufteilungen
+  const [execListWidth, setExecListWidth] = usePreference<number | null>('layout.cycle-list', null);
+  const splitRef = useRef<HTMLDivElement>(null);
+  const listPaneRef = useRef<HTMLDivElement>(null);
+  const toggleWide = () => { setExecListWidth(null); setWide((w) => { try { localStorage.setItem('anemo.execWide', w ? '0' : '1'); } catch { /* egal */ } return !w; }); };
   const statuses = useStatuses();
   const [status, setStatus] = useState<string[]>([]);
   const [text, setText] = useState('');
@@ -551,8 +556,11 @@ function CycleView({ projectKey, cycleId, route }: { projectKey: string; cycleId
     {distributing && <DistributeDialog cycleId={cycleId} onClose={() => setDistributing(false)} onDone={() => execs.reload()} />}
     {comparing && c && <CompareDialog projectKey={projectKey} cycle={c} statuses={statuses} onClose={() => setComparing(false)} />}
     {/* Ohne gewählte Ausführung bekommt die Liste die volle Breite */}
-    <div className="split" style={{ gridTemplateColumns: !execId ? 'minmax(0, 1fr)' : wide ? 'minmax(340px, 0.55fr) minmax(560px, 1.45fr)' : 'minmax(460px, 1fr) minmax(440px, 1.1fr)' }}>
-      <div className="pane">
+    <div ref={splitRef} className="split" style={{ gridTemplateColumns: !execId ? 'minmax(0, 1fr)' : execListWidth ? `minmax(300px, ${execListWidth}px) minmax(440px, 1fr)`
+      : wide ? 'minmax(340px, 0.55fr) minmax(560px, 1.45fr)' : 'minmax(460px, 1fr) minmax(440px, 1.1fr)' }}>
+      {execId && <ColumnHandle container={splitRef} pane={listPaneRef} label="Breite der Ausführungsliste" min={300} layout={wide}
+        max={() => (splitRef.current?.clientWidth ?? 1200) - 440} onResize={setExecListWidth} onReset={() => setExecListWidth(null)} />}
+      <div ref={listPaneRef} className="pane">
         <div className="stack">
           <div className="row small">
             <a href={href(['p', projectKey, 'cycles'], c?.planId ? { plan: c.planId } : {})}>‹ {c?.planName ?? 'Testplanung'}</a>

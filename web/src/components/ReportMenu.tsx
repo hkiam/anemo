@@ -6,7 +6,8 @@ interface Profile { id: string; name: string; isDefault: boolean }
 export interface ReportItem { label: string; path: string; hint?: string; zip?: boolean }
 
 /** Berichte erzeugen: Profil wählen, als HTML (druckbar → PDF), Markdown oder JSON öffnen bzw. Lieferpaket laden. */
-export function ReportMenu({ items }: { items: ReportItem[] }) {
+/** `compact`: nur Symbol (für schmale Spalten wie die Ordnerspalte) */
+export function ReportMenu({ items, compact }: { items: ReportItem[]; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLSpanElement>(null);
   const profiles = useApi<Profile[]>(open ? '/api/report-profiles' : null);
@@ -19,7 +20,7 @@ export function ReportMenu({ items }: { items: ReportItem[] }) {
   };
   return (
     <span className="account" ref={anchorRef}>
-      <button className="small" onClick={() => setOpen((o) => !o)} aria-expanded={open}><Icon>📄</Icon>Berichte<Icon>▾</Icon></button>
+      <button className="small" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={compact ? 'Berichte' : undefined} title={compact ? 'Berichte' : undefined}><Icon>📄</Icon>{compact ? '' : 'Berichte'}<Icon>▾</Icon></button>
       {open && <>
         <DropPanel anchor={anchorRef} onClose={() => setOpen(false)} className="report-panel">
           <label className="field">Profil
