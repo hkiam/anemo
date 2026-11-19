@@ -1,5 +1,18 @@
 # Änderungen
 
+## 0.9.4 – 19.11.2026
+KI-Anbindung robuster, keine Migration.
+
+**Neu**
+- KI: Zeitgrenze je Anfrage einstellbar (Administration → KI → „Zeitgrenze je Anfrage“, `AI_TIMEOUT_SECONDS`,
+  Standard 120 s, 10–900 s). Sie gilt für die ganze Antwort einschließlich Denkphase; ein Proxy davor braucht eine
+  größere Zeitgrenze (nginx `proxy_read_timeout`, Standard 60 s).
+
+**Korrekturen**
+- KI: JSON-Antworten mit geraden Anführungszeichen in Texten (`"Das Feld "Name" fehlt"`), Zeilenumbrüchen in Texten
+  oder überzähligen Kommas werden repariert statt mit „kein gültiges JSON“ abgelehnt. Die JSON-Prompts bitten zusätzlich
+  darum, in Texten „…“ zu verwenden.
+
 ## 0.9.3 – 19.11.2026
 Verbesserungen aus dem Testbetrieb, keine Migration.
 

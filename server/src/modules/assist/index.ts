@@ -13,7 +13,7 @@ import { isNotOk, isPassed } from '../../../../shared/status/status.ts';
 import { listAttachments } from '../attachments/index.ts';
 import { getCycle, getExecution } from '../execution/index.ts';
 import { cockpit } from '../reports/index.ts';
-import { aiState, ask, type LlmConfig, llmConfig, parseJson, type Profile } from './llm.ts';
+import { aiState, ask, JSON_HINT, type LlmConfig, llmConfig, parseJson, type Profile } from './llm.ts';
 import { listPrompts, promptFor, savePrompt } from './prompts.ts';
 import { type RiskItem, riskRanking, select } from './risk.ts';
 
@@ -192,7 +192,8 @@ async function llmFor(db: Db, projectId: string, skill: string): Promise<{ cfg: 
   if (!candidates.length) throw new HttpError(409, aiState().enabled ? 'Kein KI-Modell eingerichtet (Administration → KI)' : 'KI-Funktionen sind ausgeschaltet (Administration → KI)');
   const cfg = candidates.find((c) => !blocked || c.onPrem);
   if (!cfg) throw new HttpError(409, 'Für dieses Projekt sind externe Dienste gesperrt (nur ein als on-prem gekennzeichnetes Modell ist erlaubt)');
-  return { cfg, system };
+  // JSON-Antworten: gerade Anführungszeichen in Texten vermeiden (die Reparatur in parseJson fängt den Rest ab)
+  return { cfg, system: /\bJSON\b/.test(system) ? system + JSON_HINT : system };
 }
 
 export async function draftFromRequirement(db: Db, projectId: string, requirement: string, actor = 'system') {

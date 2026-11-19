@@ -52,6 +52,8 @@ export const SETTINGS: SettingDef[] = [
   { key: 'AI_EXTRA_BODY', group: 'ai', label: 'Zusätzliche Anfrageparameter (JSON)', type: 'textarea', placeholder: '{"chat_template_kwargs": {"enable_thinking": false}}',
     hint: 'werden in jede Anfrage übernommen; Qwen3 auf vLLM: Denkphase abschalten wie im Beispiel (schneller, weniger Token). <think>-Blöcke werden ohnehin entfernt.' },
   bool('AI_ON_PREM', 'ai', 'Modell läuft im eigenen Netz (on-prem)', 'false', 'on-prem-Modelle dürfen auch Inhalte von Projekten mit gesperrten externen Diensten verarbeiten'),
+  { key: 'AI_TIMEOUT_SECONDS', group: 'ai', label: 'Zeitgrenze je Anfrage (Sekunden)', type: 'number', default: '120',
+    hint: 'gilt für die ganze Antwort (Reasoning-Modelle denken vorher); 10–900. Liegt ein Proxy davor, muss dessen Zeitgrenze größer sein (nginx: proxy_read_timeout, Standard 60 s)' },
   { key: 'AI_MAX_REQUESTS_PER_HOUR', group: 'ai', label: 'Höchstens … Anfragen pro Stunde', type: 'number', default: '200', hint: 'Kostenbremse über alle Benutzer; 0 = unbegrenzt' },
   bool('AGENTS_ENABLED', 'ai', 'KI-Agenten (MCP-Schnittstelle) zulassen', 'true', 'aus = /api/mcp lehnt alle Anfragen ab; Agentenkonten bleiben bestehen'),
 

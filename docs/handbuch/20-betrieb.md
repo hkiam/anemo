@@ -36,6 +36,7 @@ gespeicherte Werte haben Vorrang und wirken ohne Neustart.
 | `AI_ENABLED` | `true` | KI-Funktionen insgesamt ein/aus |
 | `AGENTS_ENABLED` | `true` | KI-Agenten über MCP zulassen |
 | `AI_MAX_REQUESTS_PER_HOUR` | `200` | Kontingent für Sprachmodell-Anfragen (0 = unbegrenzt) |
+| `AI_TIMEOUT_SECONDS` | `120` | Zeitgrenze je Sprachmodell-Anfrage für die ganze Antwort (10–900 s). Abgeschnittene Antworten wiederholt Anemo einmal; ein Proxy davor braucht eine größere Zeitgrenze (nginx `proxy_read_timeout`, Standard 60 s) |
 
 
 ### Grundbetrieb

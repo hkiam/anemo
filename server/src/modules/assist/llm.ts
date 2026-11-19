@@ -11,6 +11,14 @@ export interface LlmConfig {
   provider: 'openai' | 'anthropic'; baseUrl: string; apiKey: string | null; model: string; onPrem: boolean;
   /** Zusätzliche Felder der Anfrage (AI_EXTRA_BODY), z. B. für Qwen3 auf vLLM {"chat_template_kwargs":{"enable_thinking":false}} */
   extraBody: Record<string, unknown> | null;
+  /** Zeitgrenze je Anfrage für die ganze Antwort (AI_TIMEOUT_SECONDS, Standard 120 s) */
+  timeoutMs: number;
+}
+
+/** AI_TIMEOUT_SECONDS → Millisekunden (10–900 s, sonst Standard 120 s). */
+export function timeoutMs(raw: string | undefined): number {
+  const n = Number(raw);
+  return (Number.isFinite(n) && n > 0 ? Math.min(900, Math.max(10, n)) : 120) * 1000;
 }
 
 /** Felder, die Anemo je Anfrage festlegt: Modell (Protokoll, Kostenbremse), Nachrichten, Längengrenze, Streaming */
@@ -52,7 +60,7 @@ export function llmConfig(env: NodeJS.ProcessEnv = settingsEnv(), profile: Profi
   if (!model || !(base || prov === 'anthropic')) return null;
   return {
     provider: prov === 'anthropic' ? 'anthropic' : 'openai', model, apiKey: env[`${p}API_KEY`] ?? null, onPrem: env[`${p}ON_PREM`] === 'true',
-    extraBody: parseExtraBody(env[`${p}EXTRA_BODY`]),
+    extraBody: parseExtraBody(env[`${p}EXTRA_BODY`]), timeoutMs: timeoutMs(env.AI_TIMEOUT_SECONDS),
     baseUrl: (base ?? 'https://api.anthropic.com').replace(/\/+$/, ''),
   };
 }
@@ -93,7 +101,7 @@ export const retryTokens = (maxTokens: number) => Math.min(16_000, Math.max(4000
 export async function complete(cfg: LlmConfig, system: string, user: string, maxTokens = 2000): Promise<string> {
   if (cfg.provider === 'anthropic') {
     const res = await http(`${cfg.baseUrl}/v1/messages`, {
-      method: 'POST', signal: AbortSignal.timeout(120_000),
+      method: 'POST', signal: AbortSignal.timeout(cfg.timeoutMs),
       headers: { 'content-type': 'application/json', 'x-api-key': cfg.apiKey ?? '', 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({ model: cfg.model, max_tokens: maxTokens, ...cfg.extraBody, system, messages: [{ role: 'user', content: user }] }),
     });
@@ -103,7 +111,7 @@ export async function complete(cfg: LlmConfig, system: string, user: string, max
     return stripThinking((d.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join(''));
   }
   const res = await http(`${cfg.baseUrl}/chat/completions`, {
-    method: 'POST', signal: AbortSignal.timeout(120_000),
+    method: 'POST', signal: AbortSignal.timeout(cfg.timeoutMs),
     headers: { 'content-type': 'application/json', ...(cfg.apiKey ? { authorization: `Bearer ${cfg.apiKey}`, 'api-key': cfg.apiKey } : {}) },
     body: JSON.stringify({ model: cfg.model, max_tokens: maxTokens, temperature: 0.2, ...cfg.extraBody, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
   });
@@ -156,17 +164,56 @@ export async function ask(db: Db, cfg: LlmConfig, meta: AskMeta, system: string,
         + 'bei Reasoning-Modellen hilft es, die Denkphase zu begrenzen (Administration → KI → Zusätzliche Anfrageparameter).');
     }
     const timeout = (e as Error).name === 'TimeoutError' || (e as Error).name === 'AbortError';
-    throw new HttpError(502, timeout ? `Das KI-Modell (${cfg.model}) hat nicht innerhalb von 2 Minuten geantwortet.` : `KI-Modell nicht nutzbar: ${msg}`);
+    throw new HttpError(502, timeout ? `Das KI-Modell (${cfg.model}) hat nicht innerhalb von ${cfg.timeoutMs / 1000} s geantwortet (Administration → KI → Zeitgrenze je Anfrage).` : `KI-Modell nicht nutzbar: ${msg}`);
   }
 }
 
-/** JSON aus einer Modellantwort lesen (auch wenn es in ```json … ``` steht). */
+/** Hinweis für JSON-Prompts: gerade Anführungszeichen in Texten zerbrechen das JSON (häufigster Formatfehler). */
+export const JSON_HINT = '\nIn Texten innerhalb des JSON keine geraden Anführungszeichen (") verwenden – zitieren mit „…“ oder \'…\'.';
+
+/**
+ * Häufige Formatfehler von Sprachmodellen beheben: ungeschützte gerade Anführungszeichen in Texten (`"Feld "Name" fehlt"`),
+ * Zeilenumbrüche/Tabulatoren in Texten und Kommas vor `}`/`]`. Ein `"` in einem Text gilt als Ende des Textes, wenn
+ * danach (abgesehen von Leerraum) `:`, `}`, `]`, das Ende oder ein Komma mit einem neuen Wert folgt – sonst als Zeichen.
+ */
+export function repairJson(raw: string): string {
+  let out = '';
+  let inStr = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i]!;
+    if (!inStr) {
+      if (ch === '"') inStr = true;
+      // Komma vor schließender Klammer weglassen
+      if (ch === ',' && /^\s*[}\]]/.test(raw.slice(i + 1))) continue;
+      out += ch;
+      continue;
+    }
+    if (ch === '\\') { out += ch + (raw[i + 1] ?? ''); i++; continue; }
+    if (ch === '\n') { out += '\\n'; continue; }
+    if (ch === '\r') continue;
+    if (ch === '\t') { out += '\\t'; continue; }
+    if (ch === '"') {
+      const rest = raw.slice(i + 1);
+      const closes = /^\s*($|[:}\]])/.test(rest) || /^\s*,\s*($|["{\[\]}\d-]|true\b|false\b|null\b)/.test(rest);
+      if (closes) { inStr = false; out += ch; } else out += '\\"';
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+/** JSON aus einer Modellantwort lesen (auch wenn es in ```json … ``` steht); typische Formatfehler werden repariert. */
 export function parseJson<T>(text: string): T {
   const m = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
   const raw = (m ? m[1]! : text).trim();
   const start = raw.search(/[[{]/);
+  const body = start > 0 ? raw.slice(start) : raw;
   try {
-    return JSON.parse(start > 0 ? raw.slice(start) : raw) as T;
+    return JSON.parse(body) as T;
+  } catch { /* reparieren */ }
+  try {
+    return JSON.parse(repairJson(body)) as T;
   } catch {
     throw new HttpError(502, raw ? 'Die KI-Antwort hatte nicht das erwartete Format (kein gültiges JSON) – bitte erneut versuchen.' : 'Die KI hat eine leere Antwort geliefert – bitte erneut versuchen.');
   }
